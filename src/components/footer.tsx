@@ -23,7 +23,7 @@ export function Footer() {
     return (
         <>
         <div className="hidden md:flex h-[55px] w-full justify-center items-center border-t border-border">
-        <div className="text-xs text-border whitespace-nowrap m-3 cursor-default">© Code Samurai</div>
+        <div className="text-xs text-border whitespace-nowrap m-3 cursor-default">© Interview Ninja</div>
             <div className="flex row w-full justify-center items-center ml-[-60px]">
                 <div  className="text-sm text-primary mx-10 cursor-pointer" 
                 onClick={() => {gaToast()}}>TOS
@@ -57,7 +57,7 @@ export function Footer() {
                 <div className="text-sm text-primary my-2 cursor-pointer"
                 onClick={() => {gaToast()}}>Docs</div>
 
-                <div className="text-xs text-border whitespace-nowrap my-2 cursor-default">© Code Samurai</div>
+                <div className="text-xs text-border whitespace-nowrap my-2 cursor-default">© Interview Ninja</div>
             </div>
         </div>
         </>

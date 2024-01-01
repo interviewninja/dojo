@@ -27,8 +27,8 @@ export function Header() {
             <Button size="icon" className="h-10 px-4 w-fit bg-background text-border border-border ml-[40px] relative hidden sm:flex space-x-2" variant="documentation">
             <span>Search Documentation...</span>
             <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border px-1.5 font-mono text-[10px] font-medium opacity-100 sm:flex">
-                <span className="text-xs text-border">⌥</span>
-                <span className="text-xs text-border">D</span>
+                <span className="text-xs text-border">⌘</span>
+                <span className="text-xs text-border">K</span>
             </kbd> 
             </Button>
             <PricingToast/>

@@ -96,7 +96,7 @@ export const Output: React.FC<OutputProps> = ({ outputDetails }) => {
       <br/>
       
       <span>
-      <div className="mb-4 text-sm">Code Samurai Dojo Compiler v0.1.0-beta, Last connected... <div dangerouslySetInnerHTML={{ __html: new Date().toLocaleString() }}/></div>
+      <div className="mb-4 text-sm">Interview Ninja Dojo Compiler v0.1.0-beta, Last connected... <div dangerouslySetInnerHTML={{ __html: new Date().toLocaleString() }}/></div>
       </span>
       {outputHistory.map((output, index) => (
         <div key={index} className="mb-2 text-sm">{output}</div>

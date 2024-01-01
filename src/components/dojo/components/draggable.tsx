@@ -60,7 +60,7 @@ export const Draggable = () => {
         {viewType === "tutorial" ?
           <div className='w-[50%] h-full p-1 relative'>
             <div className='flex w-full h-full relative rounded-lg border overflow-hidden'>
-              <video className='w-auto h-full object-cover'>
+              <video className='w-auto h-full object-cover' autoPlay muted loop>
                 <source src="/base.mp4" type="video/mp4" />
               </video>
             </div>
@@ -89,7 +89,7 @@ export const Draggable = () => {
             <div className='grid grid-cols-2 h-full w-full'>
               <div className='w-full h-full p-1 relative'>
                 <div className='flex w-full h-full relative rounded-lg border overflow-hidden'>
-                  <video className='w-auto h-full object-cover'>
+                  <video className='w-auto h-full object-cover' autoPlay muted loop>
                     <source src="/base.mp4" type="video/mp4" />
                   </video>
                 </div>

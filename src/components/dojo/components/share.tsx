@@ -31,7 +31,7 @@ export function Share() {
             </Label>
             <Input
               id="link"
-              defaultValue="https://codesamur.ai"
+              defaultValue="https://interviewninja.dev"
               readOnly
               className="h-9 bg-primary-foreground"
             />

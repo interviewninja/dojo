@@ -8,13 +8,14 @@ import { Footer } from "../components/footer"
 import { AlertMessage } from "../components/alert-messages"
 import { UserAuth } from "../components/user-auth"
 import { DojoCompiler } from "../components/dojo/dojo-compiler"
-import { WarningHeadline } from "@/components/warning-headline"
+import { Headline } from "@/components/headline"
+import { BentoBox } from '@/components/bentobox';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useToast } from "@/components/ui/use-toast"
 import { Terminal, Waves } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Code Samurai", 
+  title: "Interview Ninja", 
   description: "Human-like ML-powered coding interviews.",
 }
 
@@ -48,10 +49,9 @@ export default function Interface() {
       <div>
         <div className='flex justify-center w-screen my-10'>
           <div className="w-5/6 max-w-screen-xl">
-            <WarningHeadline/>
-            <div className="overflow-hidden rounded-[0.5rem] border bg-background shadow">
-              <DojoCompiler/>
-            </div>
+            <Headline/>
+            <BentoBox/>
+            <DojoCompiler/>
           </div>
         </div>
       </div>

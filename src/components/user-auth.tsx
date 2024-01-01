@@ -33,7 +33,7 @@ export function UserAuth() {
                 <Icons.gitHub className="mr-2 h-4 w-4" />
                 Github
               </Button> */}
-              <Button variant="default" className="bg-primary">
+              <Button variant="theme" >
                 <Icons.google className="mr-2 h-4 w-4" />
                 Google
               </Button>
