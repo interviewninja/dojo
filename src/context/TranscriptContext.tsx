@@ -9,7 +9,12 @@ type TranscriptContextInterface = {
     setIsAnimated: Dispatch<SetStateAction<boolean>>;
 };
   
-export const TranscriptContext = createContext<Partial<TranscriptContextInterface>>({})
+export const TranscriptContext = createContext<TranscriptContextInterface>({
+  transcript: [],
+  setTranscript: () => {}, 
+  isAnimated: false,
+  setIsAnimated: () => {},
+})
 
 type TranscriptContextProviderProps = {
     children: React.ReactNode

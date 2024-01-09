@@ -44,7 +44,7 @@ export const Draggable = () => {
   }
 
   const stopRecording = () => {
-    setTimeout(() => {
+    setTimeout(() => { 
       SpeechRecognition.stopListening()
       setIsHolding(false)
     }, 2000)
