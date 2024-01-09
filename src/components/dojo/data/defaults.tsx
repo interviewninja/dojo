@@ -11,10 +11,10 @@ export const defaults: Default[] = [
     language: "javascript",
     path: `/dojo/script.js`,
     code:`/**
-  * Problem: Fizzbuzz (Javascript)
-  */
+ Problem: Fizzbuzz (Javascript)
+**/
   
-  // Time: O(n) 
+  // Time Complexity: O(n) 
   function fizzBuzz(n) {
     const array = [];
     // Write code here
@@ -26,8 +26,9 @@ export const defaults: Default[] = [
   const array = fizzBuzz(16);
   console.log(array);
   
-  // Expected Result: ['1', '2', 'Fizz', '4', 'Buzz', 'Fizz', '7', '8', 'Fizz', 'Buzz', '11', 'Fizz', '13', '14', 'FizzBuzz', '16']
-  `},
+  /* Expected Result: [1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7,
+  8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz', 16] */`
+},
   {
   id: 71,
   language: "python",
@@ -36,7 +37,7 @@ export const defaults: Default[] = [
  Problem: Fizzbuzz (Python)
 """
 
-# Time: O(n) 
+# Time Complexity: O(n) 
 def fizz_buzz(n):
   array = []
   # Write code here
@@ -48,6 +49,7 @@ array = fizz_buzz(16)
 print(array)
   
 
-# Expected Result: ['1', '2', 'Fizz', '4', 'Buzz', 'Fizz', '7', '8', 'Fizz', 'Buzz', '11', 'Fizz', '13', '14', 'FizzBuzz', '16']
-`}
+""" Expected Result: [1, 2, 'Fizz', 4, 'Buzz', 'Fizz', 7,
+8, 'Fizz', 'Buzz', 11, 'Fizz', 13, 14, 'FizzBuzz', 16] """`
+}
 ]

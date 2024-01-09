@@ -14,7 +14,6 @@ export function BentoBox() {
     const [shadow, setShadow] = useState<string>()
 
     useEffect(() => {
-        console.log(theme, theme == "dark")
         if(theme == "dark"){
             setDojo("https://i.ibb.co/KrBW0yQ/Mask-group.png") 
             setCloud("https://i.ibb.co/HpjsCcW/Mask-group-1.png")

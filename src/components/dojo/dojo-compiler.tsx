@@ -7,6 +7,8 @@ import { CodeEditor } from "./components/code-editor"
 import { Output } from "./components/output"
 import { Draggable } from "./components/draggable"
 import { Button } from "../ui/button"
+import { Spinner } from "react-activity";
+import "react-activity/dist/library.css";
 import { Dialog } from "@radix-ui/react-dialog"
 import {
   HoverCard,
@@ -60,16 +62,17 @@ export function DojoCompiler() {
   const { language, setLanguage } = useGlobalContext();
   const [code, setCode] = useState(defaults[0].code);
   const [isHovering, setIsHovering] = useState(false)
+  const [isAnimating, setIsAnimating] = useState(false)
   const [hex, setHex] = useState("#FFFFFF")
   const [open, setIsOpen] = React.useState(false)
-  const [outputDetails] = useState({
-    status: {
-      id: 0, // Set default values as needed
-    },
-    stdout: '',
-    compile_output: '',
-    stderr: '',
-  });
+  // const [outputDetails] = useState({
+  //   status: {
+  //     id: 0, // Set default values as needed
+  //   },
+  //   stdout: '',
+  //   compile_output: '',
+  //   stderr: '',
+  // });
 
   const onChange = (data: any) => {
     setCode(data);
@@ -130,16 +133,35 @@ export function DojoCompiler() {
                         />
                         <div className="absolute h-[40vh] w-[calc(100%-14px)] bottom-0 left-0 supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur">
                           <Separator/>
-                          <Output outputDetails={outputDetails}/>
+                          <Output/>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2 ml-auto mr-4">
-                        <Button variant="secondary">Check My Answer
-                          <CheckCircle2 className="h-5 w-5 ml-1.5"/>
-                        </Button>
-                        <Button>Run
-                          <PlayCircle className="h-5 w-5 ml-1.5"/>
-                        </Button>
+                      <div className="flex items-center justify-between w-[calc(100%-13px)]">
+                        <div className="flex gap-[3px]">
+                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                            {!isAnimating && <div className="h-1 w-1 bg-green-400 rounded-full"></div>}
+                            Case 1
+                          </div>
+                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                            {!isAnimating && <div className="h-1 w-1 bg-red-500 rounded-full"></div>}
+                            Case 2
+                          </div>
+                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                            {!isAnimating && <div className="h-1 w-1 bg-red-500 rounded-full"></div>}
+                            Case 3
+                          </div>
+                        </div>
+                        <div className="flex gap-[3px]">
+                          <Button>Run
+                            <PlayCircle className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                          <Button variant="secondary">Submit
+                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </TabsContent>

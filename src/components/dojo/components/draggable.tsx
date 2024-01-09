@@ -16,6 +16,8 @@ import { Rnd } from 'react-rnd'
 import Image from 'next/image'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import { useToast } from "@/components/ui/use-toast"
+import { useContext } from "react";
+import { TranscriptContext } from "@/context/TranscriptContext";
 import { dev } from '@/dev';
 
 const style = {
@@ -28,22 +30,34 @@ const style = {
 };
 
 export const Draggable = () => {
+  const { setTranscript, isAnimated, setIsAnimated } = useContext(TranscriptContext)
   const { toast } = useToast();
   const { viewType, setViewType } = useGlobalContext();
-  const [animating, setAnimating] = useState(false);
   const [isHolding, setIsHolding] = useState(false);
   
   const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
 
+  const startRecording = () => {
+    resetTranscript()
+    SpeechRecognition.startListening({ continuous: true }) 
+    setIsHolding(true)
+  }
+
+  const stopRecording = () => {
+    setTimeout(() => {
+      SpeechRecognition.stopListening()
+      setIsHolding(false)
+    }, 2000)
+  }
+
   useEffect(() => {
-    // dev.log("without conditional: "+ listening)
-    // dev.log("without conditional: "+ transcript)
     if(transcript && browserSupportsSpeechRecognition && !isHolding){
-      // dev.log(listening)
-      dev.log(transcript)
-      setAnimating(true)
+      const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+      setTranscript(prevTranscript => [...prevTranscript, newMessage])
+      resetTranscript()
+      setIsAnimated(true)
     }
-  }, [transcript, isHolding])
+  }, [isHolding])
 
   return (
     <div>
@@ -64,10 +78,10 @@ export const Draggable = () => {
                 <source src="/base.mp4" type="video/mp4" />
               </video>
             </div>
-            <Spinner animating={animating} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
+            <Spinner animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
             <div
-              onMouseDown={() => (resetTranscript(), SpeechRecognition.startListening(), setIsHolding(true))}
-              onMouseUp={() => (SpeechRecognition.stopListening(), setIsHolding(false))}
+              onMouseDown={startRecording}
+              onMouseUp={stopRecording}
               className='absolute bottom-[10px] right-[10px] z-10 cursor-pointer'>
               <Mic
                 color={isHolding ? '#23A3F9' : 'white'}
@@ -93,10 +107,10 @@ export const Draggable = () => {
                     <source src="/base.mp4" type="video/mp4" />
                   </video>
                 </div>
-                <Spinner animating={animating} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
+                <Spinner animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
                 <div
-                  onMouseDown={() => (resetTranscript(), SpeechRecognition.startListening(), setIsHolding(true))}
-                  onMouseUp={() => (SpeechRecognition.stopListening(), setIsHolding(false))}
+                  onMouseDown={startRecording}
+                  onMouseUp={stopRecording}
                   className='absolute bottom-[10px] right-[10px] z-10 cursor-pointer'>
                   <Mic
                     color={isHolding ? '#23A3F9' : 'white'}
