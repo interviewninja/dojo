@@ -360,7 +360,7 @@ export function DojoCompiler() {
                 <Task/>
                 {/* <LanguageSelector types={langTypes} languages={languages} /> */}
                 {/* <ViewSelector types={viewTypes} views={views} /> */}
-                <DifficultySlider defaultValue={[0.25]} />
+                {/* <DifficultySlider defaultValue={[0.25]} /> */}
                 {/* <Separator/>
                 <div className="grid gap-2">
                   <Label htmlFor="mode">Color Theme</Label>
@@ -429,7 +429,7 @@ export function DojoCompiler() {
                               <b>Case 2:</b>
                               <br></br>
                               <div className="max-w-[200px] text-wrap">
-                              Must return "Fizz" for multiples of 3 and "Buzz" for multiples of 5
+                              Must return &quot;Fizz&quot; for multiples of 3 and &quot;Buzz&quot; for multiples of 5
                               <br></br>
                               <br></br>
                               Results: <span className={`${testSpecs[1] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
@@ -448,7 +448,7 @@ export function DojoCompiler() {
                               <b>Case 3:</b>
                               <br></br>
                               <div className="max-w-[200px] text-wrap">
-                              Must return "FizzBuzz" for multiples of both 3 and 5
+                              Must return &quot;FizzBuzz&quot; for multiples of both 3 and 5
                               <br></br>
                               <br></br>
                               Results: <span className={`${testSpecs[2] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
@@ -510,7 +510,7 @@ export function DojoCompiler() {
                               <b>Case 2:</b>
                               <br></br>
                               <div className="max-w-[200px] text-wrap">
-                              Must return "Fizz" for multiples of 3 and "Buzz" for multiples of 5
+                              Must return &quot;Fizz&quot; for multiples of 3 and &quot;Buzz&quot; for multiples of 5
                               <br></br>
                               <br></br>
                               Results: <span className={`${testSpecs[1] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
@@ -529,7 +529,7 @@ export function DojoCompiler() {
                               <b>Case 3:</b>
                               <br></br>
                               <div className="max-w-[200px] text-wrap">
-                              Must return "FizzBuzz" for multiples of both 3 and 5
+                              Must return &quot;FizzBuzz&quot; for multiples of both 3 and 5
                               <br></br>
                               <br></br>
                               Results: <span className={`${testSpecs[2] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
