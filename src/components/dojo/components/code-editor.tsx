@@ -72,10 +72,10 @@ export const CodeEditor: React.FC<CodeEditorProps> = ({ onChange, language, code
       <Editor
         height={`100%`}
         width={`100%`}
-        language={language || "javascript"}
+        language={language}
         value={code}
         theme={'currentTheme'}
-        defaultValue="// some comment"
+        defaultValue="// Click the play icon to begin."
         onChange={handleEditorChange}
       />
     </div>

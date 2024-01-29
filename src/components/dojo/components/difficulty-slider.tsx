@@ -24,6 +24,7 @@ export function DifficultySlider({
   const [value, setValue] = React.useState<SliderProps['defaultValue']>(defaultValue);
 
   const valueChanged = (newValue: SliderProps['defaultValue']) => {
+    if(newValue && newValue[0] < .25) return
     setValue(newValue);
     setOpenAuth(true);
   }
@@ -41,7 +42,8 @@ export function DifficultySlider({
               id="difficulty"
               max={1}
               defaultValue={value}
-              step={.1}
+              step={.25}
+              value={value}
               onValueChange={valueChanged}
               className="[&_[role=slider]]:h-4 [&_[role=slider]]:w-4"
               aria-label="Difficulty"

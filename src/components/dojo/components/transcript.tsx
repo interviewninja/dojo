@@ -23,8 +23,9 @@ import { dev } from "@/dev"
 //   }
 // }
 
-export const Output = () => {
-  const { transcript, setTranscript, isAnimated } = useContext(TranscriptContext)
+export const Transcript = () => {
+  const { transcript, setTranscript, isAnimated, isTalking, setIsTalking } = useContext(TranscriptContext)
+  const [utterance, setUtterance] = useState<any>(null)
   // const { language, setLanguage } = useGlobalContext()
   // const [ defaultPath ] = useState(defaults[0].path)
   // const [outputHistory, setOutputHistory] = useState<(JSX.Element | null)[]>([]);
@@ -101,8 +102,28 @@ export const Output = () => {
     }
   }, [outputRef])
 
+  useEffect(() => {
+    const mostRecent = transcript[transcript.length - 1]
+    console.log(mostRecent)
+    if(mostRecent?.interviewer){
+      setIsTalking(true)
+
+      const synth = window.speechSynthesis;
+      const utterance = new SpeechSynthesisUtterance(mostRecent?.payload);
+      speechSynthesis.speak(utterance)
+
+      utterance.onend = () => {
+        setIsTalking(false)
+      }
+
+      return () => {
+        synth.cancel();
+      };
+    }
+  }, [transcript]);
+
   return (
-    <div id="output" className="h-full w-full overflow-auto bg-secondary-foreground relative" ref={outputRef} >
+    <div id="output" className="h-full w-full flex gap-[10px] flex-col relative" ref={outputRef}>
       {/* <div className="p-4">
         <p className="text-xs font-mono whitespace-pre">
           {ascii}
@@ -123,19 +144,19 @@ export const Output = () => {
         <input className="flex border-none py-1 bg-transparent w-full focus:outline-none" value={""} onChange={(e) => {e}} />
       </div> */}
 
-      <div className="m-[10px] flex gap-2">
-        <div className="h-9 w-9 rounded-full overflow-hidden">
+      {/* <div className="flex gap-2">
+        <div className="min-h-[35px] min-w-[35px] w-[35px] h-[35px] rounded-full overflow-hidden">
           <img src={"/profile.png"}/>
         </div>  
         <div className="bg-background rounded-tr-md rounded-br-md rounded-bl-md p-2 pl-4 border-[.5px] border-border max-w-[350px]">
-          <div className="text-primary">Hi, Welcome to Interview Ninja! Let&apos;s start your coding interview. Hold down the microphone icon to begin.</div>
+          <div className="text-primary">Hi, Welcome to Interview Ninja! Let&apos;s begin your coding interview. Press the play icon to start.</div>
         </div>
-      </div>  
+      </div>   */}
 
       {transcript?.map((message) => (
          message.interviewer ?
-         <div key={message.id} className="m-[10px] flex gap-2">
-            <div className="h-9 w-9 rounded-full overflow-hidden">
+         <div key={message.id} className="flex gap-2">
+            <div className="min-h-[35px] min-w-[35px] w-[35px] h-[35px] rounded-full overflow-hidden">
               <img src={"/profile.png"}/>
             </div>  
             <div className="bg-background rounded-tr-md rounded-br-md rounded-bl-md p-2 pl-4 border-[.5px] border-border max-w-[350px]">
@@ -143,8 +164,8 @@ export const Output = () => {
             </div>
           </div>  
          :
-         <div key={message.id} className="m-[10px] flex gap-2">
-            <div className="h-9 w-9 rounded-full overflow-hidden flex items-center justify-center bg-border">
+         <div key={message.id} className="flex gap-2">
+            <div className="min-h-[35px] min-w-[35px] w-[35px] h-[35px] rounded-full overflow-hidden flex items-center justify-center bg-border">
               <div className="text-background font-bold">Y</div>
             </div>  
             <div className="bg-secondary rounded-tr-md rounded-br-md rounded-bl-md p-2 pl-4 border-[.5px] border-border max-w-[350px]">
@@ -152,7 +173,7 @@ export const Output = () => {
             </div>
           </div>  
       ))}
-      <Bounce animating={isAnimated} color={'primary'} size={8} className='fixed bottom-[0px] left-[20px] z-2' />
+      {/* <Bounce animating={isAnimated} color={'primary'} size={8} className='fixed bottom-[0px] left-[20px] z-2' /> */}
 
     </div>
   );

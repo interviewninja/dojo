@@ -19,9 +19,9 @@ export const Task = () => {
         {/* <p> */}
           Write a program that iterates over the range of numbers from 1 to 16 and appends each number to an array. However, the program must handle the following special cases:
           <ul className="list-disc pl-6">
-            <li>For multiples of 3, the program should print &quot;Fizz&quot; instead of the number.</li>
-            <li>For multiples of 5, the program should print &quot;Buzz&quot; instead of the number.</li>
-            <li>For multiples of both 3 and 5, the program should print &quot;FizzBuzz&quot; instead of the number.</li>
+            <li>For multiples of 3, the program should return &quot;Fizz&quot; instead of the number.</li>
+            <li>For multiples of 5, the program should return &quot;Buzz&quot; instead of the number.</li>
+            <li>For multiples of both 3 and 5, the program should return &quot;FizzBuzz&quot; instead of the number.</li>
           </ul>
         {/* </p> */}
       </div>

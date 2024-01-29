@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   description: "Human-like ML-powered coding interviews.",
 }
 
-export default function Interface() {  
+export default function Interface() {
   return (
     <>
       <Script
@@ -48,7 +48,8 @@ export default function Interface() {
       </header>
       <div>
         <div className='flex justify-center w-screen my-10'>
-          <div className="w-5/6 max-w-screen-xl">
+          {/* max-w-screen-xl */}
+          <div className="w-5/6 ">
             <Headline/>
             <BentoBox/>
             <DojoCompiler/>

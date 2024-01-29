@@ -1,14 +1,16 @@
 "use client"
 
+import 'regenerator-runtime/runtime';
 import * as React from "react"
 import { useEffect, useState, useRef } from "react"
 import Image from "next/image"
 import { CodeEditor } from "./components/code-editor"
-import { Output } from "./components/output"
+import { Transcript } from "./components/transcript"
 import { Draggable } from "./components/draggable"
 import { Button } from "../ui/button"
-import { Spinner } from "react-activity";
+import { Windmill, Spinner } from "react-activity";
 import "react-activity/dist/library.css";
+import { Mic, VideoOff, Play, Pause } from 'lucide-react';
 import { Dialog } from "@radix-ui/react-dialog"
 import {
   HoverCard,
@@ -41,6 +43,7 @@ import { CodeViewer } from "./components/code-viewer"
 import { MaxLengthSelector } from "./components/maxlength-selector"
 import { ModelSelector } from "./components/model-selector"
 import { LanguageSelector } from "./components/language-selector"
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import { ViewSelector } from "./components/view-selector"
 import { Task } from "./components/task"
 import { Actions } from "./components/actions"
@@ -54,17 +57,31 @@ import { langTypes, languages } from "./data/languages"
 import { defaults, Default } from "./data/defaults"
 import { viewTypes, views } from "./data/views"
 import { files } from "./data/files"
+import { useContext } from "react";
+import { TranscriptContext } from "@/context/TranscriptContext";
+import axios from 'axios'
 import { dev } from "@/dev"
+import { fizzBuzzTestFn } from "@/testing/FizzBuzz"
 
 export function DojoCompiler() {
+  const { setTranscript, isAnimated, setIsAnimated, isTalking } = useContext(TranscriptContext)
   const { theme } = useTheme();
   const { setOpenAuth } = useGlobalContext();
   const { language, setLanguage } = useGlobalContext();
   const [code, setCode] = useState(defaults[0].code);
   const [isHovering, setIsHovering] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
+  const [result, setResult] = useState("")
+  const [testSpecs, setTestSpecs] = useState<boolean[]>(Array(3).fill(false))
   const [hex, setHex] = useState("#FFFFFF")
   const [open, setIsOpen] = React.useState(false)
+  const [hasPressed, setHasPressed] = useState(false)
+  const [requestingLanguage, setRequestingLanguage] = useState(false)
+  const [isTuringMode, setIsTuringMode] = useState(false)
+  const runOnce = useRef<boolean>(false)
+  const initialRender = useRef<boolean>(true)
+  const runTimes = useRef<number>(0)
+
   // const [outputDetails] = useState({
   //   status: {
   //     id: 0, // Set default values as needed
@@ -73,18 +90,155 @@ export function DojoCompiler() {
   //   compile_output: '',
   //   stderr: '',
   // });
+  
+  const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
+
+  const handleRecording = () => {
+    if(hasPressed){ 
+      SpeechRecognition.stopListening()
+      setHasPressed(false)
+      return 
+    }
+    resetTranscript()
+    SpeechRecognition.startListening({ continuous: true }) 
+    setHasPressed(true)
+    if(initialRender.current){
+      initialRender.current = false
+      const message = "Great, you're ready to start! Just tell me, do you prefer JavaScript or Python for our interview?"
+      const newMessage = { interviewer: true, payload: message, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+      setTranscript(prevTranscript => [...prevTranscript, newMessage])
+      setRequestingLanguage(true)
+    }
+  }
+
+  useEffect(() => {
+    if(isTalking){
+      SpeechRecognition.stopListening()
+      resetTranscript()
+      return
+    }
+    resetTranscript()
+    SpeechRecognition.startListening({ continuous: true }) 
+  }, [isTalking])
+
+  useEffect(() => {
+    if(transcript && !isAnimated && !isTuringMode){
+      const timeoutId = setTimeout(() => {
+        const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+        setTranscript(prevTranscript => [...prevTranscript, newMessage])
+        resetTranscript()
+        setIsAnimated(true)
+
+        if(requestingLanguage){
+          setRequestingLanguage(false)
+          setIsAnimated(false)
+
+          const containsPython = transcript.toLowerCase().includes("python")
+          const containsJavaScript = transcript.toLowerCase().includes("javascript")
+
+          let selectedLanguage = "javascript"
+
+          if(containsPython && !containsJavaScript){
+            selectedLanguage = "python"
+          }
+
+          setLanguage(selectedLanguage)
+        }
+        dev.log("the user has paused")
+      }, 2000)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [transcript, isTalking])
 
   const onChange = (data: any) => {
     setCode(data);
   };
 
+  function waitFn(){
+    return new Promise( resolve =>
+      setTimeout(() => resolve("result"), 3000)
+    )
+  } 
+
+  const runCode = async () => {
+    setIsAnimating(true)
+    const headers = {
+        'ngrok-skip-browser-warning': 'true',
+      }
+    const baseUrl = "https://419e-2601-182-101-90-79c1-428c-3d82-f37a.ngrok-free.app"
+    axios.post(`${baseUrl}/submissions`, {
+      "source_code": code,
+      "language_id": defaults.find((item: Default) => item.language === language)?.id
+    },{ headers }
+    )
+    .then((res) => {
+      const token = res.data.token
+      waitFn()
+      .then(() => { 
+       const rerunCode = () => {
+        axios.get(`${baseUrl}/submissions/${token}`,{ headers })
+        .then((res) => {
+
+          if(res.data.status.id < 3){
+            return waitFn().then(rerunCode)
+          }
+          runTimes.current += 1
+
+          const output = res.data.stdout
+          if(!output){
+            if(runTimes.current > 1){
+              setIsAnimating(false) 
+              return 
+            }
+              runCode()
+              return
+          }
+          const sanitizedOutput = output.replace(/\s+/g, ' ')
+          setResult(sanitizedOutput)
+
+          setTestSpecs(fizzBuzzTestFn(eval(sanitizedOutput)))
+          // dev.log(eval(sanitizedOutput), fizzBuzzTestFn(eval(sanitizedOutput)))
+          setIsAnimating(false)
+        })
+        .catch((err) => {
+          setIsAnimating(false)
+          dev.log("Error", err)
+        })
+       }
+       rerunCode()
+      })
+    })
+    .catch((err) => {
+      setIsAnimating(false)
+      dev.log("Error", err)
+    })
+
+  }
+
   useEffect(() => {
     const matchingDefault = defaults.find((item: Default) => item.language === language);
     if (matchingDefault) {
-      dev.log(matchingDefault.code)
+      // dev.log(matchingDefault.code)
       setCode(matchingDefault.code);
     }
   }, [language])
+
+  const changeTheme = () => {
+    const element = document.getElementById("playground");
+
+    if(element && window.scrollY >= element.offsetTop - 75 && !runOnce.current){
+      runOnce.current = true 
+      const message = "Hi, Welcome to Interview Ninja! Let's begin your coding interview. Press the play icon to start"
+      const newMessage = { interviewer: true, payload: `${message}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+      setTranscript(prevTranscript => [...prevTranscript, newMessage])
+      //
+    }
+  }
+
+  useEffect(() => {
+    window.addEventListener('scroll', changeTheme)
+  }, [])
 
   // function ColorPicker ({color}) {
   //   return(
@@ -107,9 +261,40 @@ export function DojoCompiler() {
   return (
     <>
       <div id="playground">
-        <div className="hidden h-full flex-col md:flex overflow-hidden rounded-[0.5rem] border bg-background shadow">
+        <div className="hidden h-fit flex-col md:flex overflow-hidden rounded-[0.5rem] border bg-background shadow">
           <div id="dojo" className="container flex flex-col items-start justify-between space-y-2 py-4 sm:flex-row sm:items-center sm:space-y-0 md:h-16 bg-secondary-foreground brightness-5">
-            <h2 className="text-lg font-semibold whitespace-nowrap">Dojo Compiler</h2>
+            <div className="flex gap-3 items-center">
+              <h2 className="text-lg font-semibold whitespace-nowrap">Dojo Compiler</h2>
+              {!isTuringMode && 
+              <div
+                onClick={handleRecording}
+                className={"relative"}>
+                { !hasPressed && <Play className="h-5 w-5"/> }
+                { hasPressed && <Pause className="h-5 w-5"/> }
+                <HoverCard openDelay={200}>
+                  <HoverCardTrigger asChild>
+                  <div className="h-full w-full absolute bottom-0 left-0"></div>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-fit text-left text-xs" side="right">
+                    { !hasPressed ?
+                    <>
+                      <b>Press to start interview</b>
+                      <br></br>
+                      <div  className="max-w-[300px] text-wrap">Once you start all audio will be recorded. Treat this like an interview environment.</div>
+                    </>
+                    :
+                    <>
+                      <b>Press to pause interview</b>
+                      <br></br>
+                      <div  className="max-w-[300px] text-wrap">Once you pause, audio will no longer be recorded.</div>
+                    </>
+                    }
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
+              }
+              <Windmill animating={isAnimated} size={12} />
+            </div>
             <div className="ml-auto flex w-full space-x-2 sm:justify-end">
               <div className="hidden space-x-2 md:flex">
                 <Share />
@@ -118,74 +303,27 @@ export function DojoCompiler() {
             </div>
           </div>
           <Separator/>
-          <Tabs defaultValue="complete" className="flex-1 bg-secondary-foreground">
+          <Tabs defaultValue="bot" className="flex-1 bg-secondary-foreground">
             <div className="container h-full py-6">
-            <div className="flex flex-row h-full space-x-5">
-              <div className="w-[calc(100%-215px)] relative">
-                  <TabsContent value="complete" className="mt-0 border-0 p-0">
-                    <div className="flex h-full flex-col space-y-4">
-                      <FileSelector files={files} />
-                      <div className="flex h-auto w-full md:h-screen relative">
-                        <CodeEditor
-                        code={code}
-                        onChange={onChange}
-                        language={language}
-                        />
-                        <div className="absolute h-[40vh] w-[calc(100%-14px)] bottom-0 left-0 supports-backdrop-blur:bg-background/60 bg-background/95 backdrop-blur">
-                          <Separator/>
-                          <Output/>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-between w-[calc(100%-13px)]">
-                        <div className="flex gap-[3px]">
-                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
-                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
-                            {!isAnimating && <div className="h-1 w-1 bg-green-400 rounded-full"></div>}
-                            Case 1
-                          </div>
-                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
-                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
-                            {!isAnimating && <div className="h-1 w-1 bg-red-500 rounded-full"></div>}
-                            Case 2
-                          </div>
-                          <div className="width-[20px] flex gap-[6px] bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
-                            {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
-                            {!isAnimating && <div className="h-1 w-1 bg-red-500 rounded-full"></div>}
-                            Case 3
-                          </div>
-                        </div>
-                        <div className="flex gap-[3px]">
-                          <Button>Run
-                            <PlayCircle className="h-5 w-5 ml-1.5"/>
-                          </Button>
-                          <Button variant="secondary">Submit
-                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  <div className="w-20 h-20 absolute top-0 right-[50%]"> 
-                  <Draggable/>
-                  </div>
-              </div>
-              <div className="w-200 min-w-[200px] max-w-[200px] space-y-4">
+            <div className="flex flex-row h-full gap-x-[15px]">
+
+              <div className="w-225 min-w-[225px] max-w-[225px] space-y-4">
                 <div className="h-fit w-full flex flex-col space-y-2">
                   <Label htmlFor="mode">Mode</Label>
                   <TabsList id="mode" className="grid grid-cols-2 bg-secondary">
-                    <TabsTrigger value="complete">
+                    <TabsTrigger value="bot"
+                      onClick={() => (setIsTuringMode(false))}
+                    >
                       <Bot className="w-5 h-5"/>
                     </TabsTrigger>
                     <TabsTrigger 
                       onMouseEnter={() => {setIsHovering(true)}}
                       onMouseLeave={() => {setIsHovering(false)}}
-                      value="insert" className="relative" onClick={() => setOpenAuth(true)}>                                     
-                      {/* <Zap 
-                      className="w-5 h-5"
-                      // color={isHovering ? "#24FC7C" : undefined}
-                      /> */}
-
-                      {isHovering ?
+                      value="turing" className="relative" 
+                      onClick={() => (setIsTuringMode(true))}
+                      // onClick={() => setOpenAuth(true)}
+                      >    
+                      {isHovering || isTuringMode ?
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zap">
                         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke="url(#gradient)" strokeWidth="2" fill="none" />
                         <defs>
@@ -220,9 +358,9 @@ export function DojoCompiler() {
                   </TabsList>
                 </div>
                 <Task/>
-                <LanguageSelector types={langTypes} languages={languages} />
-                <ViewSelector types={viewTypes} views={views} />
-                <DifficultySlider defaultValue={[0.05]} />
+                {/* <LanguageSelector types={langTypes} languages={languages} /> */}
+                {/* <ViewSelector types={viewTypes} views={views} /> */}
+                <DifficultySlider defaultValue={[0.25]} />
                 {/* <Separator/>
                 <div className="grid gap-2">
                   <Label htmlFor="mode">Color Theme</Label>
@@ -246,6 +384,180 @@ export function DojoCompiler() {
                   </div>
                 </div> */}
               </div>
+
+              <div className="w-[calc(100%-215px)] min-w-[100px] relative">
+                  <TabsContent value="bot" className="mt-0 border-0 p-0">
+                    <div className="flex h-full flex-col space-y-4">
+                      {/* <FileSelector files={files} /> */}
+                      <div className="flex h-auto w-full md:h-screen relative">
+                        <CodeEditor
+                        code={language ? code : ""}
+                        onChange={onChange}
+                        language={language}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between w-[calc(100%-13px)]">
+                        <div className="flex gap-[3px]">
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px] ${testSpecs[0] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 1
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 1:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return an array with at least 16 elements
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[0] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap overflow-x-hidden bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[1] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 2
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 2:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return "Fizz" for multiples of 3 and "Buzz" for multiples of 5
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[1] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[2] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 3
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 3:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return "FizzBuzz" for multiples of both 3 and 5
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[2] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </div>
+                        <div className="flex gap-[3px]">
+                          <Button disabled={isAnimating} onClick={runCode} >Run
+                            <PlayCircle className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                          <Button variant="secondary">Submit
+                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="turing" className="mt-0 border-0 p-0">
+                  <div className="flex h-full flex-col space-y-4">
+                      {/* <FileSelector files={files} /> */}
+                      <div className="flex h-auto w-full md:h-screen relative">
+                        <CodeEditor
+                        code={language ? code : ""}
+                        onChange={onChange}
+                        language={language}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between w-[calc(100%-13px)]">
+                        <div className="flex gap-[3px]">
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px] ${testSpecs[0] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 1
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 1:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return an array with at least 16 elements
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[0] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap overflow-x-hidden bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[1] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 2
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 2:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return "Fizz" for multiples of 3 and "Buzz" for multiples of 5
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[1] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                          <HoverCard openDelay={200}>
+                            <HoverCardTrigger asChild>
+                              <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
+                                {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
+                                {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[2] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
+                                Case 3
+                              </div>
+                            </HoverCardTrigger>
+                            <HoverCardContent className="w-fit text-left text-xs" side="top">
+                              <b>Case 3:</b>
+                              <br></br>
+                              <div className="max-w-[200px] text-wrap">
+                              Must return "FizzBuzz" for multiples of both 3 and 5
+                              <br></br>
+                              <br></br>
+                              Results: <span className={`${testSpecs[2] ?  "text-green-400" : "text-red-500"} text-wrap`}>{result}</span>
+                              </div>
+                            </HoverCardContent>
+                          </HoverCard>
+                        </div>
+                        <div className="flex gap-[3px]">
+                          <Button disabled={isAnimating} onClick={runCode} >Run
+                            <PlayCircle className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                          <Button variant="secondary">Submit
+                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-20 h-20 absolute top-0 right-[50%]"> 
+                      <Draggable/>
+                    </div>
+                  </TabsContent>
+              </div>
+
+              <div className='hidden h-auto min-w-[325px] w-[400px] lg:flex'>
+              <Transcript/>
+              </div>
+
+              
             </div>
             </div>
           </Tabs>

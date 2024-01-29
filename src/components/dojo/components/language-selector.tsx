@@ -50,7 +50,7 @@ export function LanguageSelector({ languages, types, ...props }: LanguageSelecto
         <HoverCardContent
           align="start"
           className="w-[260px] text-sm"
-          side="left"
+          side="right"
         >
         Choose the language you want to compile.
         </HoverCardContent>
@@ -71,7 +71,7 @@ export function LanguageSelector({ languages, types, ...props }: LanguageSelecto
         <PopoverContent align="end" className="w-[250px] p-0">
           <HoverCard>
             <HoverCardContent
-              side="left"
+              side="right"
               align="start"
               forceMount
               className="min-h-[280px]"

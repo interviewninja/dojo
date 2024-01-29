@@ -10,7 +10,7 @@ export function Headline() {
     const [currentWordIndex, setCurrentWordIndex] = useState(0);
     const [blinkRectangle, setBlinkRectangle] = useState(true);
     const [hideRectangle, setHideRectangle] = useState(true);
-    const [titles, setTitles] = useState<string[]>(["Coding", "Technical", "Job"]);
+    const [titles, setTitles] = useState<string[]>(["Technical", "Behavioral", "Job"]);
 
     const textContent = "Human-like ML-powered coding interviews";
     const words = textContent.split(' ');
@@ -56,7 +56,7 @@ export function Headline() {
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            if(titles.length === 1) return setTitles(["Coding", "Technical", "Job"])
+            if(titles.length === 1) return setTitles(["Technical", "Behavioral", "Job"])
 
             const remainingTitles = titles.slice(1)
             setTitles(remainingTitles)

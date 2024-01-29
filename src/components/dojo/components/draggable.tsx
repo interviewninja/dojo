@@ -3,8 +3,8 @@
 import 'regenerator-runtime/runtime';
 import React, { useState, useEffect, useRef } from 'react';
 import Webcam from "react-webcam";
-import { Mic, VideoOff } from 'lucide-react';
-import { Spinner } from "react-activity";
+import { Mic, VideoOff, Play, Pause } from 'lucide-react';
+import { Windmill } from "react-activity";
 import "react-activity/dist/library.css"; import {
   HoverCard,
   HoverCardContent,
@@ -34,30 +34,34 @@ export const Draggable = () => {
   const { toast } = useToast();
   const { viewType, setViewType } = useGlobalContext();
   const [isHolding, setIsHolding] = useState(false);
+  const [hasPressed, setHasPressed] = useState(false);
   
   const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
 
-  const startRecording = () => {
+  const handleRecording = () => {
+    if(hasPressed){ 
+      SpeechRecognition.stopListening()
+      setHasPressed(false)
+      return 
+    }
     resetTranscript()
     SpeechRecognition.startListening({ continuous: true }) 
-    setIsHolding(true)
-  }
-
-  const stopRecording = () => {
-    setTimeout(() => { 
-      SpeechRecognition.stopListening()
-      setIsHolding(false)
-    }, 2000)
+    setHasPressed(true)
   }
 
   useEffect(() => {
-    if(transcript && browserSupportsSpeechRecognition && !isHolding){
-      const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
-      setTranscript(prevTranscript => [...prevTranscript, newMessage])
-      resetTranscript()
-      setIsAnimated(true)
+    if(transcript && !isAnimated){
+      const timeoutId = setTimeout(() => {
+        const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+        setTranscript(prevTranscript => [...prevTranscript, newMessage])
+        resetTranscript()
+        setIsAnimated(true)
+        dev.log("the user has paused")
+      }, 2000)
+
+      return () => clearTimeout(timeoutId)
     }
-  }, [isHolding])
+  }, [transcript])
 
   return (
     <div>
@@ -71,29 +75,37 @@ export const Draggable = () => {
           height: "182.5px"
         }}
       >
-        {viewType === "tutorial" ?
+        {/* {viewType === "tutorial" ?
           <div className='w-[50%] h-full p-1 relative'>
             <div className='flex w-full h-full relative rounded-lg border overflow-hidden'>
               <video className='w-auto h-full object-cover' autoPlay muted loop>
                 <source src="/base.mp4" type="video/mp4" />
               </video>
             </div>
-            <Spinner animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
+            <Windmill animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
             <div
-              onMouseDown={startRecording}
-              onMouseUp={stopRecording}
+              onClick={handleRecording}
               className='absolute bottom-[10px] right-[10px] z-10 cursor-pointer'>
-              <Mic
-                color={isHolding ? '#23A3F9' : 'white'}
-              />
+              { !hasPressed && <Play color={'background'}/> }
+              { hasPressed && <Pause color={'background'}/> }
               <HoverCard openDelay={200}>
                 <HoverCardTrigger asChild>
                   <div className="h-full w-full absolute bottom-0 left-0"></div>
                 </HoverCardTrigger>
                 <HoverCardContent className="w-fit text-left text-xs" side="left">
-                  <b>Hold to record</b>
-                  <br></br>
-                  Headsets are recommended for improved speech recognition.
+                  { !hasPressed ?
+                  <>
+                    <b>Press to start interview</b>
+                    <br></br>
+                    <div  className="max-w-[300px] text-wrap">Once you start all audio will be recorded. Treat this like an interview environment.</div>
+                  </>
+                  :
+                  <>
+                    <b>Press to pause interview</b>
+                    <br></br>
+                    <div  className="max-w-[300px] text-wrap">Once you pause, audio will no longer be recorded.</div>
+                  </>
+                  }
                 </HoverCardContent>
               </HoverCard>
             </div>
@@ -107,20 +119,30 @@ export const Draggable = () => {
                     <source src="/base.mp4" type="video/mp4" />
                   </video>
                 </div>
-                <Spinner animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
+                <Windmill animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' />
                 <div
-                  onMouseDown={startRecording}
-                  onMouseUp={stopRecording}
+                  onClick={handleRecording}
                   className='absolute bottom-[10px] right-[10px] z-10 cursor-pointer'>
-                  <Mic
-                    color={isHolding ? '#23A3F9' : 'white'}
-                  />
+                  { !hasPressed && <Play color={'background'}/> }
+                  { hasPressed && <Pause color={'background'}/> }
                   <HoverCard openDelay={200}>
                     <HoverCardTrigger asChild>
                       <div className="h-full w-full absolute bottom-0 left-0"></div>
                     </HoverCardTrigger>
-                    <HoverCardContent className="w-fit text-left text-sm" side="left">
-                      Hold to record
+                    <HoverCardContent className="w-fit text-left text-xs" side="left">
+                      { !hasPressed ?
+                      <>
+                        <b>Press to start interview</b>
+                        <br></br>
+                        <div  className="max-w-[300px] text-wrap">Once you start all audio will be recorded. Treat this like an interview environment.</div>
+                      </>
+                      :
+                      <>
+                        <b>Press to pause interview</b>
+                        <br></br>
+                        <div  className="max-w-[300px] text-wrap">Once you pause audio will no longer be recorded.</div>
+                      </>
+                      }
                     </HoverCardContent>
                   </HoverCard>
                 </div>
@@ -143,7 +165,41 @@ export const Draggable = () => {
                 <VideoOff color="#09090B" className='w-[2.25vw] h-auto absolute top-3 left-3 z-0' />
               </div>
             </div>
-          </div>}
+          </div>} */}
+          <div className='w-[50%] h-full p-1 relative'>
+            <div className='flex w-full h-full relative rounded-lg border overflow-hidden'>
+              <video className='w-auto h-full object-cover' autoPlay muted loop>
+                <source src="/base.mp4" type="video/mp4" />
+              </video>
+            </div>
+            {/* <Windmill animating={isAnimated} color={'background'} size={16} className='absolute bottom-[30px] left-[10px] z-2' /> */}
+            <div
+              onClick={handleRecording}
+              className='absolute bottom-[10px] right-[10px] z-10 cursor-pointer'>
+              { !hasPressed && <Play color={'background'}/> }
+              { hasPressed && <Pause color={'background'}/> }
+              <HoverCard openDelay={200}>
+                <HoverCardTrigger asChild>
+                  <div className="h-full w-full absolute bottom-0 left-0"></div>
+                </HoverCardTrigger>
+                <HoverCardContent className="w-fit text-left text-xs" side="left">
+                  { !hasPressed ?
+                  <>
+                    <b>Press to start interview</b>
+                    <br></br>
+                    <div  className="max-w-[300px] text-wrap">Once you start all audio will be recorded. Treat this like an interview environment.</div>
+                  </>
+                  :
+                  <>
+                    <b>Press to pause interview</b>
+                    <br></br>
+                    <div  className="max-w-[300px] text-wrap">Once you pause, audio will no longer be recorded.</div>
+                  </>
+                  }
+                </HoverCardContent>
+              </HoverCard>
+            </div>
+          </div>
       </Rnd>
     </div>
   )
