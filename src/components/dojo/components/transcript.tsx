@@ -104,7 +104,6 @@ export const Transcript = () => {
 
   useEffect(() => {
     const mostRecent = transcript[transcript.length - 1]
-    console.log(mostRecent)
     if(mostRecent?.interviewer){
       setIsTalking(true)
 

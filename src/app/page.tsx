@@ -25,7 +25,7 @@ export default function Interface() {
       <Script
         strategy="afterInteractive"
         id="gtag-script"
-        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_CODE}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${process.env.GOOGLE_ANALYTICS_CODE}`}
       />
       <Script
         strategy="afterInteractive"
@@ -35,7 +35,7 @@ export default function Interface() {
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-            gtag('config', '${process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_CODE}', {
+            gtag('config', '${process.env.GOOGLE_ANALYTICS_CODE}', {
               page_path: window.location.pathname,
             });
           `,

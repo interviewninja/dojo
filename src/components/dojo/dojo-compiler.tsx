@@ -162,16 +162,16 @@ export function DojoCompiler() {
   } 
 
   const runCode = async () => {
+    if(!language) return
     setIsAnimating(true)
     const headers = {
-        'ngrok-skip-browser-warning': 'true',
-      }
-    const baseUrl = "https://419e-2601-182-101-90-79c1-428c-3d82-f37a.ngrok-free.app"
+      'ngrok-skip-browser-warning': 'true'
+    }
+    const baseUrl = process.env.JUDGE0_API_URL
     axios.post(`${baseUrl}/submissions`, {
       "source_code": code,
       "language_id": defaults.find((item: Default) => item.language === language)?.id
-    },{ headers }
-    )
+    },{ headers })
     .then((res) => {
       const token = res.data.token
       waitFn()
@@ -553,7 +553,7 @@ export function DojoCompiler() {
                   </TabsContent>
               </div>
 
-              <div className='hidden h-auto min-w-[325px] w-[400px] lg:flex'>
+              <div className='hidden h-auto min-w-[300px] w-[350px] lg:flex'>
               <Transcript/>
               </div>
 
