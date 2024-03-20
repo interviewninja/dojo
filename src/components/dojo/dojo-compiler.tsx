@@ -93,6 +93,46 @@ export function DojoCompiler() {
   
   const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
 
+  const genPrompt = () => {
+  return `
+    [INST]
+    <<SYS>>
+    As a technical lead at a software company conducting a technical interview, your role is to guide, assess, and provide valuable insights to the interviewee. Maintain a professional and constructive tone throughout the interaction. Your feedback should be constructive, focusing on improvement rather than criticism. Encourage the interviewee to think critically and solve problems effectively. Emphasize the importance of clean and efficient code, as well as logical problem-solving skills. If a candidate's response is incorrect or unclear, provide guidance on how to approach the problem or where they may have deviated. Avoid any discriminatory or inappropriate remarks, ensuring a fair and unbiased evaluation. If a question is unclear or seems factually incoherent, seek clarification and guide the interviewee towards a meaningful response. If you're unsure about a specific technical detail, admit it rather than providing false information. Your goal is to create a positive and conducive environment for the interviewee to showcase their technical abilities.
+    <</SYS>>
+    ${null}, this is my current code and the task I need to complete. 
+    Task:
+    Write a program that iterates over the range of numbers from 1 to 16 and appends each number to an array. However, the program must handle the following special cases:
+      * For multiples of 3, the program should return &quot;Fizz&quot; instead of the number.
+      * For multiples of 5, the program should return &quot;Buzz&quot; instead of the number.
+      * Or multiples of both 3 and 5, the program should return &quot;FizzBuzz&quot; instead of the number.
+    Code:
+    ${code}
+    [/INST]
+  `
+  }
+
+  const getLLMResponse = async () => {
+    const headers = {
+      "Authorization": `Bearer ${process.env.RUNPOD_API_KEY}`,
+      "Content-Type": "application/json",
+    }
+    axios.post(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/run`, {
+      "input": {
+        "prompt": genPrompt(),
+        "max_new_tokens": 500,
+        "temperature": 0.9,
+        "top_k": 50,
+        "top_p": 0.7,
+        "repetition_penalty": 1.2,
+        "batch_size": 8,
+        "stop": ["</s>"]
+      }
+    },{ headers })
+    .then((res) => {
+      console.log(res)
+    })
+  }
+
   const handleRecording = () => {
     if(hasPressed){ 
       SpeechRecognition.stopListening()
@@ -108,7 +148,9 @@ export function DojoCompiler() {
       const newMessage = { interviewer: true, payload: message, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
       setTranscript(prevTranscript => [...prevTranscript, newMessage])
       setRequestingLanguage(true)
+      return
     }
+    // const response = await getLLMResponse()
   }
 
   useEffect(() => {
@@ -460,7 +502,7 @@ export function DojoCompiler() {
                           <Button disabled={isAnimating} onClick={runCode} >Run
                             <PlayCircle className="h-5 w-5 ml-1.5"/>
                           </Button>
-                          <Button variant="secondary">Submit
+                          <Button variant="secondary" onClick={getLLMResponse}>Submit
                             <CheckCircle2 className="h-5 w-5 ml-1.5"/>
                           </Button>
                         </div>
