@@ -122,7 +122,7 @@ export const Transcript = () => {
   }, [transcript]);
 
   return (
-    <div id="output" className="h-full w-full flex gap-[10px] flex-col relative" ref={outputRef}>
+    <div id="output" className="h-full w-full flex gap-[10px] flex-col relative overflow-scroll max-h-[950px]" ref={outputRef}>
       {/* <div className="p-4">
         <p className="text-xs font-mono whitespace-pre">
           {ascii}
@@ -143,14 +143,14 @@ export const Transcript = () => {
         <input className="flex border-none py-1 bg-transparent w-full focus:outline-none" value={""} onChange={(e) => {e}} />
       </div> */}
 
-      {/* <div className="flex gap-2">
+      <div className="flex gap-2">
         <div className="min-h-[35px] min-w-[35px] w-[35px] h-[35px] rounded-full overflow-hidden">
           <img src={"/profile.png"}/>
         </div>  
         <div className="bg-background rounded-tr-md rounded-br-md rounded-bl-md p-2 pl-4 border-[.5px] border-border max-w-[350px]">
           <div className="text-primary">Hi, Welcome to Interview Ninja! Let&apos;s begin your coding interview. Press the play icon to start.</div>
         </div>
-      </div>   */}
+      </div>  
 
       {transcript?.map((message) => (
          message.interviewer ?

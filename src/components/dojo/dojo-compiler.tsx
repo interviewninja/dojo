@@ -10,7 +10,6 @@ import { Draggable } from "./components/draggable"
 import { Button } from "../ui/button"
 import { Windmill, Spinner } from "react-activity";
 import "react-activity/dist/library.css";
-import { Mic, VideoOff, Play, Pause } from 'lucide-react';
 import { Dialog } from "@radix-ui/react-dialog"
 import {
   HoverCard,
@@ -21,7 +20,7 @@ import { useTheme } from "next-themes";
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Bot, Zap, HelpCircle, CheckCircle2, PlayCircle } from 'lucide-react';
+import { Bot, Zap, HelpCircle, CheckCircle2, PlayCircle, Mic, MicOff, VideoOff, Play, Pause  } from 'lucide-react';
 import { motion } from "framer-motion";
 import {
   Tabs,
@@ -61,6 +60,7 @@ import { useContext } from "react";
 import { TranscriptContext } from "@/context/TranscriptContext";
 import axios from 'axios'
 import { dev } from "@/dev"
+// import Replicate from "replicate"
 import { fizzBuzzTestFn } from "@/testing/FizzBuzz"
 
 export function DojoCompiler() {
@@ -99,38 +99,73 @@ export function DojoCompiler() {
     <<SYS>>
     As a technical lead at a software company conducting a technical interview, your role is to guide, assess, and provide valuable insights to the interviewee. Maintain a professional and constructive tone throughout the interaction. Your feedback should be constructive, focusing on improvement rather than criticism. Encourage the interviewee to think critically and solve problems effectively. Emphasize the importance of clean and efficient code, as well as logical problem-solving skills. If a candidate's response is incorrect or unclear, provide guidance on how to approach the problem or where they may have deviated. Avoid any discriminatory or inappropriate remarks, ensuring a fair and unbiased evaluation. If a question is unclear or seems factually incoherent, seek clarification and guide the interviewee towards a meaningful response. If you're unsure about a specific technical detail, admit it rather than providing false information. Your goal is to create a positive and conducive environment for the interviewee to showcase their technical abilities.
     <</SYS>>
-    ${null}, this is my current code and the task I need to complete. 
-    Task:
     Write a program that iterates over the range of numbers from 1 to 16 and appends each number to an array. However, the program must handle the following special cases:
-      * For multiples of 3, the program should return &quot;Fizz&quot; instead of the number.
-      * For multiples of 5, the program should return &quot;Buzz&quot; instead of the number.
-      * Or multiples of both 3 and 5, the program should return &quot;FizzBuzz&quot; instead of the number.
-    Code:
-    ${code}
+        \n For multiples of 3, the program should return Fizz instead of the number.
+        \n For multiples of 5, the program should return Buzz instead of the number.
+        \n For multiples of both 3 and 5, the program should return FizzBuzz instead of the number. \n
+        \n Provide a short response explaining how the code below can be corrected: \n \n ${`${code}`}
     [/INST]
   `
   }
 
   const getLLMResponse = async () => {
+    console.log("Button clicked")
+    if(!language) return
+    // const headers = {
+    //   "Authorization": `Bearer ${process.env.RUNPOD_API_KEY}`,
+    //   "Content-Type": "application/json",
+    // }
+    // axios.post(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/runsync`, {
+    //   "input": {
+    //     "prompt": genPrompt(),
+    //     "max_new_tokens": 500,
+    //     "temperature": 0.9,
+    //     "top_k": 50,
+    //     "top_p": 0.7,
+    //     "repetition_penalty": 1.2,
+    //     "batch_size": 8,
+    //     "stop": ["</s>"]
+    //   }
+    // },{ headers })
+    // .then((res) => {
+    //   setTimeout(() => {
+    //     axios.get(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/status/${res.data.id}`,{ headers })
+    //     .then((res) => {
+    //       console.log("Model output: ", res.data.output)
+    //     })
+    //   }, 2500)
+    // })
+    
     const headers = {
-      "Authorization": `Bearer ${process.env.RUNPOD_API_KEY}`,
-      "Content-Type": "application/json",
-    }
-    axios.post(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/run`, {
-      "input": {
-        "prompt": genPrompt(),
-        "max_new_tokens": 500,
-        "temperature": 0.9,
-        "top_k": 50,
-        "top_p": 0.7,
-        "repetition_penalty": 1.2,
-        "batch_size": 8,
-        "stop": ["</s>"]
+      'Accept': 'application/json',
+      'Authorization': `Bearer ${process.env.RUNPOD_API_KEY}`,
+      'Content-Type': 'application/json'
+    };
+
+    const requestData = {
+      input: {
+        prompt: "How old is the universe?",
+        sampling_params: {
+          max_tokens: 100,
+          n: 1,
+          presence_penalty: 0.2,
+          frequency_penalty: 0.7,
+          temperature: 0.3
+        }
       }
-    },{ headers })
-    .then((res) => {
-      console.log(res)
+    };
+    
+    axios.post('https://api.runpod.ai/v2/llama2-13b-chat/runsync', requestData, { headers })
+    .then(response => {
+      const res = response.data.output.text[0]
+      const newMessage = { interviewer: true, payload: res, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+      setTranscript(prevTranscript => [...prevTranscript, newMessage])
+      setIsAnimated(false)
     })
+    .catch(error => {
+      console.error('Error:', error)
+    })
+
   }
 
   const handleRecording = () => {
@@ -139,8 +174,6 @@ export function DojoCompiler() {
       setHasPressed(false)
       return 
     }
-    resetTranscript()
-    SpeechRecognition.startListening({ continuous: true }) 
     setHasPressed(true)
     if(initialRender.current){
       initialRender.current = false
@@ -150,7 +183,8 @@ export function DojoCompiler() {
       setRequestingLanguage(true)
       return
     }
-    // const response = await getLLMResponse()
+    resetTranscript()
+    SpeechRecognition.startListening({ continuous: true }) 
   }
 
   useEffect(() => {
@@ -168,6 +202,7 @@ export function DojoCompiler() {
       const timeoutId = setTimeout(() => {
         const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
         setTranscript(prevTranscript => [...prevTranscript, newMessage])
+        getLLMResponse()
         resetTranscript()
         setIsAnimated(true)
 
@@ -266,21 +301,21 @@ export function DojoCompiler() {
     }
   }, [language])
 
-  const changeTheme = () => {
-    const element = document.getElementById("playground");
+  // const changeTheme = () => {
+  //   const element = document.getElementById("playground");
 
-    if(element && window.scrollY >= element.offsetTop - 75 && !runOnce.current){
-      runOnce.current = true 
-      const message = "Hi, Welcome to Interview Ninja! Let's begin your coding interview. Press the play icon to start"
-      const newMessage = { interviewer: true, payload: `${message}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
-      setTranscript(prevTranscript => [...prevTranscript, newMessage])
-      //
-    }
-  }
+  //   if(element && window.scrollY >= element.offsetTop - 75 && !runOnce.current){
+  //     runOnce.current = true 
+  //     const message = "Hi, Welcome to Interview Ninja! Let's begin your coding interview. Press the play icon to start"
+  //     const newMessage = { interviewer: true, payload: `${message}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+  //     setTranscript(prevTranscript => [...prevTranscript, newMessage])
+  //     //
+  //   }
+  // }
 
-  useEffect(() => {
-    window.addEventListener('scroll', changeTheme)
-  }, [])
+  // useEffect(() => {
+  //   window.addEventListener('scroll', changeTheme)
+  // }, [])
 
   // function ColorPicker ({color}) {
   //   return(
@@ -310,15 +345,16 @@ export function DojoCompiler() {
               {!isTuringMode && 
               <div
                 onClick={handleRecording}
-                className={"relative"}>
-                { !hasPressed && <Play className="h-5 w-5"/> }
-                { hasPressed && <Pause className="h-5 w-5"/> }
+                className={"relative cursor-pointer"}>
+                { !hasPressed && initialRender.current && <Play className="h-5 w-5"/> }
+                { hasPressed && listening && <MicOff className="h-5 w-5"/> }
+                { !hasPressed && !listening && !initialRender.current && <Mic className="h-5 w-5"/> }
                 <HoverCard openDelay={200}>
                   <HoverCardTrigger asChild>
                   <div className="h-full w-full absolute bottom-0 left-0"></div>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-fit text-left text-xs" side="right">
-                    { !hasPressed ?
+                    { !hasPressed && initialRender.current ?
                     <>
                       <b>Press to start interview</b>
                       <br></br>
@@ -326,9 +362,9 @@ export function DojoCompiler() {
                     </>
                     :
                     <>
-                      <b>Press to pause interview</b>
+                      <b>Toggle mic during interview</b>
                       <br></br>
-                      <div  className="max-w-[300px] text-wrap">Once you pause, audio will no longer be recorded.</div>
+                      <div  className="max-w-[300px] text-wrap">When the mic is on, your audio will be sent to the LLM, toggle accordingly.</div>
                     </>
                     }
                   </HoverCardContent>
@@ -445,7 +481,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px] ${testSpecs[0] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 1
+                                {/* Case 1 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -464,7 +500,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap overflow-x-hidden bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[1] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 2
+                                {/* Case 2 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -483,7 +519,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[2] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 3
+                                {/* Case 3 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -499,11 +535,13 @@ export function DojoCompiler() {
                           </HoverCard>
                         </div>
                         <div className="flex gap-[3px]">
-                          <Button disabled={isAnimating} onClick={runCode} >Run
-                            <PlayCircle className="h-5 w-5 ml-1.5"/>
+                          <Button className="flex gap-[3px]" disabled={isAnimating} onClick={runCode} >
+                            Run
+                            <PlayCircle className="h-5 w-5"/>
                           </Button>
-                          <Button variant="secondary" onClick={getLLMResponse}>Submit
-                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
+                          <Button className="flex gap-[3px]" variant="secondary" onClick={getLLMResponse}>
+                            Submit
+                            <CheckCircle2 className="h-5 w-5"/>
                           </Button>
                         </div>
                       </div>
@@ -579,7 +617,7 @@ export function DojoCompiler() {
                             </HoverCardContent>
                           </HoverCard>
                         </div>
-                        <div className="flex gap-[3px]">
+                        <div className="flex gap-[3px] bg-red-500">
                           <Button disabled={isAnimating} onClick={runCode} >Run
                             <PlayCircle className="h-5 w-5 ml-1.5"/>
                           </Button>

@@ -9,7 +9,8 @@ const nextConfig = {
       JUDGE0_API_URL: process.env.JUDGE0_API_URL,
       GOOGLE_ANALYTICS_CODE: process.env.GOOGLE_ANALYTICS_CODE,
       RUNPOD_API_ID: process.env.RUNPOD_API_ID,
-      RUNPOD_API_KEY: process.env.RUNPOD_API_KEY
+      RUNPOD_API_KEY: process.env.RUNPOD_API_KEY,
+      REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN
     },
     webpack: (config) => {
       config.module.rules.push({
