@@ -119,7 +119,6 @@ export function DojoCompiler() {
   }
 
   const getLLMResponse = async () => {
-    console.log("Button clicked")
     if(!language) return
     // const headers = {
     //   "Authorization": `Bearer ${process.env.RUNPOD_API_KEY}`,
@@ -172,10 +171,10 @@ export function DojoCompiler() {
       setTranscript(prevTranscript => [...prevTranscript, newMessage])
       setIsAnimated(false)
     })
-    .catch(error => {
-      console.error('Error:', error)
+    .catch((err) => {
+      setIsAnimated(false)
+      dev.log("Error", err)
     })
-
   }
 
   const handleRecording = () => {
