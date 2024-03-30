@@ -8,9 +8,12 @@ import Image from 'next/image'
 import logo from "../images/logo.png"
 import { useGlobalContext } from "@/contexts/global"
 import { useEffect } from "react";
+import { signOut, useSession } from "next-auth/react";
 
 export function Header() {
     const { setOpenAuth } = useGlobalContext()
+
+    const { data: session } = useSession()
 
     return(
     <div className='container flex h-14 items-center space-x-4 sm:justify-between sm:space-x-0'>
@@ -36,9 +39,15 @@ export function Header() {
         </div>
         <div className="flex-grow"></div>
         <div className="flex items-center space-x-3">
-        <Button onClick={() => {setOpenAuth(true)}} variant="header" size="icon" className="h-10 px-8 py-2">
-          <span>Login</span>
-        </Button>
+        {session && session.user ? 
+         <Button onClick={() => signOut()} variant="header" size="icon" className="h-10 px-8 py-2">
+            <span>Logout</span>
+         </Button>
+        : 
+         <Button onClick={() => setOpenAuth(true)} variant="header" size="icon" className="h-10 px-8 py-2">
+            <span>Login</span>
+         </Button>  
+        }
         <ModeToggle/>
         </div>
     </div>

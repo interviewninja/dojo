@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalContextProvider } from "../contexts/global"
 import { TranscriptContextProvider } from '@/context/TranscriptContext'
+import SessionProviders from '@/context/SessionContext'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +22,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <TranscriptContextProvider>
             <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
               <GlobalContextProvider>
+                <SessionProviders>
                 {children}
+                </SessionProviders>
               </GlobalContextProvider>
             </ThemeProvider>
             <Toaster />

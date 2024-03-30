@@ -15,20 +15,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useGlobalContext } from "@/contexts/global"
 import { useGoogleLogin, GoogleLogin } from '@react-oauth/google'
-import { GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleOAuthProvider } from '@react-oauth/google'
+import { signIn } from "next-auth/react"
 
 export function UserAuth() {
   const { openAuth, setOpenAuth } = useGlobalContext()
   const divRef = useRef<HTMLDivElement>(null)
   const [currentWidth, setCurrentWidth] = useState<number | null>(null)
-  
-  const clientId = "695127041980-kojpm5fiu2h1l57u32hitnko17btplg7.apps.googleusercontent.com"
-
-  const googleLogin = {}
-  
-  // useGoogleLogin({
-  //   onSuccess: tokenResponse => console.log(tokenResponse),
-  // })
 
   useEffect(() => {
     const handleResize = () => {
@@ -47,12 +40,7 @@ export function UserAuth() {
     }
   }, [])
 
-  useEffect(() => {
-    //
-  })
-
   return (
-    <GoogleOAuthProvider clientId={clientId}>
       <div style={{display: openAuth ? "flex" : "none"}} className="w-[100vw] {openAuth ? flex : hidden} h-[100vh] absolute z-50 bg-black/[.8] items-center justify-center">
         <div className="w-[70%] max-w-md">
           <Card className="bg-background">
@@ -69,7 +57,7 @@ export function UserAuth() {
                   <Icons.gitHub className="mr-2 h-4 w-4" />
                   Github
                 </Button> */}
-                <Button variant="theme"  onClick={() => ({})}>
+                <Button variant="theme" onClick={() => signIn()}>
                   <Icons.google className="mr-2 h-4 w-4" />
                   Google
                 </Button>
@@ -109,7 +97,6 @@ export function UserAuth() {
             </CardFooter> */}
           </Card>
         </div>
-      </div>
-      </GoogleOAuthProvider>
+      </div> 
   )
 }
