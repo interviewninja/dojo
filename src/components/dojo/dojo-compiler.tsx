@@ -60,11 +60,12 @@ import { useContext } from "react";
 import { TranscriptContext } from "@/context/TranscriptContext";
 import axios from 'axios'
 import { dev } from "@/dev"
-// import Replicate from "replicate"
+import { v4 as uuidv4 } from 'uuid';
 import { fizzBuzzTestFn } from "@/testing/FizzBuzz"
+import { GoogleGenerativeAI } from "@google/generative-ai"
 
 export function DojoCompiler() {
-  const { setTranscript, isAnimated, setIsAnimated, isTalking } = useContext(TranscriptContext)
+  const { transcript: context, setTranscript, isAnimated, setIsAnimated, isAudioPlaying } = useContext(TranscriptContext)
   const { theme } = useTheme();
   const { setOpenAuth } = useGlobalContext();
   const { language, setLanguage } = useGlobalContext();
@@ -75,141 +76,81 @@ export function DojoCompiler() {
   const [testSpecs, setTestSpecs] = useState<boolean[]>(Array(3).fill(false))
   const [hex, setHex] = useState("#FFFFFF")
   const [open, setIsOpen] = React.useState(false)
-  const [hasPressed, setHasPressed] = useState(false)
+  const [isMicOn, setIsMicOn] = useState(false)
   const [requestingLanguage, setRequestingLanguage] = useState(false)
   const [isTuringMode, setIsTuringMode] = useState(false)
   const runOnce = useRef<boolean>(false)
   const initialRender = useRef<boolean>(true)
   const runTimes = useRef<number>(0)
 
-  // const [outputDetails] = useState({
-  //   status: {
-  //     id: 0, // Set default values as needed
-  //   },
-  //   stdout: '',
-  //   compile_output: '',
-  //   stderr: '',
-  // });
-  
   const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
 
-  const genPrompt = () => {
-  // return `
-  //   [INST]
-  //   <<SYS>>
-  //   As a technical lead at a software company conducting a technical interview, your role is to guide, assess, and provide valuable insights to the interviewee. Maintain a professional and constructive tone throughout the interaction. Your feedback should be constructive, focusing on improvement rather than criticism. Encourage the interviewee to think critically and solve problems effectively. Emphasize the importance of clean and efficient code, as well as logical problem-solving skills. If a candidate's response is incorrect or unclear, provide guidance on how to approach the problem or where they may have deviated. Avoid any discriminatory or inappropriate remarks, ensuring a fair and unbiased evaluation. If a question is unclear or seems factually incoherent, seek clarification and guide the interviewee towards a meaningful response. If you're unsure about a specific technical detail, admit it rather than providing false information. Your goal is to create a positive and conducive environment for the interviewee to showcase their technical abilities.
-  //   <</SYS>>
-  //   Write a program that iterates over the range of numbers from 1 to 16 and appends each number to an array. However, the program must handle the following special cases:
-  //       \n For multiples of 3, the program should return Fizz instead of the number.
-  //       \n For multiples of 5, the program should return Buzz instead of the number.
-  //       \n For multiples of both 3 and 5, the program should return FizzBuzz instead of the number. \n
-  //       \n Provide a short response explaining how the code below can be corrected: \n \n ${`${code}`}
-  //   [/INST]
-  // `
-  return `
-    ${transcript}. Provide one sentence that aligns with the task requirements and current code, without revealing the solution:
-
-    **Task:** Write a program that iterates over the range of numbers from 1 to 16 and appends each number or string representation of conditions (e.g., Fizz, Buzz, FizzBuzz) to an array. However, the program must handle the following special cases:
-        For multiples of 3, append "Fizz" to the array instead of the number.
-        For multiples of 5, append "Buzz" to the array instead of the number.
-        For multiples of both 3 and 5, append "FizzBuzz" to the array instead of the number.
-    
-    <|code|> ${code} <|/code|>
-  `
-  }
-
-  const getLLMResponse = async () => {
-    if(!language) return
-    // const headers = {
-    //   "Authorization": `Bearer ${process.env.RUNPOD_API_KEY}`,
-    //   "Content-Type": "application/json",
-    // }
-    // axios.post(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/runsync`, {
-    //   "input": {
-    //     "prompt": genPrompt(),
-    //     "max_new_tokens": 500,
-    //     "temperature": 0.9,
-    //     "top_k": 50,
-    //     "top_p": 0.7,
-    //     "repetition_penalty": 1.2,
-    //     "batch_size": 8,
-    //     "stop": ["</s>"]
-    //   }
-    // },{ headers })
-    // .then((res) => {
-    //   setTimeout(() => {
-    //     axios.get(`https://api.runpod.ai/v2/${process.env.RUNPOD_API_ID}/status/${res.data.id}`,{ headers })
-    //     .then((res) => {
-    //       console.log("Model output: ", res.data.output)
-    //     })
-    //   }, 2500)
-    // })
-    
-    const headers = {
-      'Accept': 'application/json',
-      'Authorization': `Bearer ${process.env.RUNPOD_API_KEY}`,
-      'Content-Type': 'application/json'
-    };
-
-    const requestData = {
-      input: {
-        prompt: genPrompt(),
-        sampling_params: {
-          max_tokens: 250,
-          n: 1,
-          presence_penalty: 0.3, //0.2
-          frequency_penalty: 0.7,
-          temperature: .58 //0.3
-        }
-      }
-    };
-    
-    axios.post('https://api.runpod.ai/v2/llama2-13b-chat/runsync', requestData, { headers })
-    .then(response => {
-      const res = response.data.output.text[0]
-      const newMessage = { interviewer: true, payload: res, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
-      setTranscript(prevTranscript => [...prevTranscript, newMessage])
-      setIsAnimated(false)
-    })
-    .catch((err) => {
-      setIsAnimated(false)
-      dev.log("Error", err)
-    })
-  }
-
   const handleRecording = () => {
-    if(hasPressed){ 
+    if(isMicOn){ 
       SpeechRecognition.stopListening()
-      setHasPressed(false)
+      setIsMicOn(false)
       return 
     }
-    setHasPressed(true)
+    setIsMicOn(true)
     if(initialRender.current){
       initialRender.current = false
       const message = "Great, you're ready to start! Just tell me, do you prefer JavaScript or Python for our interview?"
-      const newMessage = { interviewer: true, payload: message, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+      const newMessage = { id: uuidv4(), interviewer: true, payload: message, audio: true }
       setTranscript(prevTranscript => [...prevTranscript, newMessage])
       setRequestingLanguage(true)
       return
     }
+    console.log("resetting transcript")
     resetTranscript()
     SpeechRecognition.startListening({ continuous: true }) 
   }
 
+  const genPrompt = () => {
+    return `
+      Task: You are an experienced senior software engineer conducting a technical coding interview. Provide a concise ONE-TWO SENTENCE response that aligns the user's question, the current code, and the given challenge, while factoring the total conversation, WITHOUT directly providing the answer to the coding challenge. If the question doesn’t align feel free to clarify any confusion.
+
+      Challenge: Write a program that iterates over the range of numbers from 1 to 16 and appends each number or string representation of conditions (e.g., Fizz, Buzz, FizzBuzz) to an array. However, the program must handle the following special cases:
+              - For multiples of 3, append "Fizz" to the array instead of the number.
+              - For multiples of 5, append "Buzz" to the array instead of the number.
+              - For multiples of both 3 and 5, append "FizzBuzz" to the array instead of the number.
+
+      Current Code: ${code}
+
+      User Question: ${transcript}
+
+      Conversational Context: ${context.pop()}
+    `
+  }
+
+  const getLLMResponse = async () => {
+    if(!language) return
+    
+    const getLLM = new GoogleGenerativeAI(`${process.env.GOOGLE_GEMINI_API_KEY}`)
+    const model = getLLM.getGenerativeModel({model: "gemini-pro"})
+
+    model.generateContent(genPrompt())
+    .then(result => {
+      const message = result.response.text()
+      const newMessage = { id: uuidv4(), interviewer: true, payload: message, audio: true }
+      setTranscript(prevTranscript => [...prevTranscript, newMessage])
+      setIsAnimated(false)
+    })
+  }
+
   useEffect(() => {
-    if(isTalking){
+    if(isAudioPlaying){
       SpeechRecognition.stopListening()
       resetTranscript()
       return
     }
     resetTranscript()
     SpeechRecognition.startListening({ continuous: true }) 
-  }, [isTalking])
+  }, [isAudioPlaying])
 
   useEffect(() => {
     if(transcript && !isAnimated && !isTuringMode){
       const timeoutId = setTimeout(() => {
-        const newMessage = { interviewer: false, payload: `${transcript}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
+        const newMessage = { id: uuidv4(), interviewer: false, payload: `${transcript}.` }
         setTranscript(prevTranscript => [...prevTranscript, newMessage])
         getLLMResponse()
         resetTranscript()
@@ -230,12 +171,22 @@ export function DojoCompiler() {
 
           setLanguage(selectedLanguage)
         }
-        dev.log("the user has paused")
+        console.log("the user has paused")
       }, 2000)
 
       return () => clearTimeout(timeoutId)
     }
-  }, [transcript, isTalking])
+  }, [transcript, isAudioPlaying])
+  
+  useEffect(() => {
+    setTranscript([{ id: uuidv4(), interviewer: true, payload: "Hi, Welcome to Interview Ninja! Let's begin your coding interview. Press the play icon to start.", audio: false }])
+    initialRender.current = true
+    SpeechRecognition.stopListening()
+    resetTranscript()
+    setIsMicOn(false)
+    setIsAnimated(false)
+    setLanguage("")
+  }, [isTuringMode])
 
   const onChange = (data: any) => {
     setCode(data);
@@ -284,12 +235,12 @@ export function DojoCompiler() {
           setResult(sanitizedOutput)
 
           setTestSpecs(fizzBuzzTestFn(eval(sanitizedOutput)))
-          // dev.log(eval(sanitizedOutput), fizzBuzzTestFn(eval(sanitizedOutput)))
+          // console.log(eval(sanitizedOutput), fizzBuzzTestFn(eval(sanitizedOutput)))
           setIsAnimating(false)
         })
         .catch((err) => {
           setIsAnimating(false)
-          dev.log("Error", err)
+          console.log("Error", err)
         })
        }
        rerunCode()
@@ -297,7 +248,7 @@ export function DojoCompiler() {
     })
     .catch((err) => {
       setIsAnimating(false)
-      dev.log("Error", err)
+      console.log("Error", err)
     })
 
   }
@@ -305,44 +256,9 @@ export function DojoCompiler() {
   useEffect(() => {
     const matchingDefault = defaults.find((item: Default) => item.language === language);
     if (matchingDefault) {
-      // dev.log(matchingDefault.code)
       setCode(matchingDefault.code);
     }
   }, [language])
-
-  // const changeTheme = () => {
-  //   const element = document.getElementById("playground");
-
-  //   if(element && window.scrollY >= element.offsetTop - 75 && !runOnce.current){
-  //     runOnce.current = true 
-  //     const message = "Hi, Welcome to Interview Ninja! Let's begin your coding interview. Press the play icon to start"
-  //     const newMessage = { interviewer: true, payload: `${message}.`, id: Math.floor(Math.random() * 1_000_000_000) + 1 }
-  //     setTranscript(prevTranscript => [...prevTranscript, newMessage])
-  //     //
-  //   }
-  // }
-
-  // useEffect(() => {
-  //   window.addEventListener('scroll', changeTheme)
-  // }, [])
-
-  // function ColorPicker ({color}) {
-  //   return(
-  //     <HoverCard openDelay={200}>
-  //       <HoverCardTrigger asChild>
-  //       <div className="h-full w-full absolute bottom-0 left-0"></div>
-  //       </HoverCardTrigger>
-  //       <HoverCardContent className="w-fit text-left text-sm" side="left">
-  //       <Colorful
-  //           color={color}
-  //           onChange={(color) => {
-  //             setHex(color.hex);
-  //           }}
-  //         />
-  //       </HoverCardContent>
-  //     </HoverCard>
-  //   )
-  // }
 
   return (
     <>
@@ -355,15 +271,15 @@ export function DojoCompiler() {
               <div
                 onClick={handleRecording}
                 className={"relative cursor-pointer"}>
-                { !hasPressed && initialRender.current && <Play className="h-5 w-5"/> }
-                { hasPressed && listening && <MicOff className="h-5 w-5"/> }
-                { !hasPressed && !listening && !initialRender.current && <Mic className="h-5 w-5"/> }
+                { !isMicOn && initialRender.current && <Play className="h-5 w-5"/> }
+                { !isMicOn && !listening && !initialRender.current && <MicOff className="h-5 w-5"/> }
+                { isMicOn && listening && !initialRender.current && <Mic className="h-5 w-5"/> }
                 <HoverCard openDelay={200}>
                   <HoverCardTrigger asChild>
                   <div className="h-full w-full absolute bottom-0 left-0"></div>
                   </HoverCardTrigger>
                   <HoverCardContent className="w-fit text-left text-xs" side="right">
-                    { !hasPressed && initialRender.current ?
+                    { !isMicOn && initialRender.current ?
                     <>
                       <b>Press to start interview</b>
                       <br></br>
@@ -380,7 +296,7 @@ export function DojoCompiler() {
                 </HoverCard>
               </div>
               }
-              <Windmill animating={isAnimated} size={12} />
+              <Windmill animating={isAnimated && !isTuringMode} size={12} />
             </div>
             <div className="ml-auto flex w-full space-x-2 sm:justify-end">
               <div className="hidden space-x-2 md:flex">
@@ -626,7 +542,7 @@ export function DojoCompiler() {
                             </HoverCardContent>
                           </HoverCard>
                         </div>
-                        <div className="flex gap-[3px] bg-red-500">
+                        <div className="flex gap-[3px]">
                           <Button disabled={isAnimating} onClick={runCode} >Run
                             <PlayCircle className="h-5 w-5 ml-1.5"/>
                           </Button>
@@ -637,7 +553,7 @@ export function DojoCompiler() {
                       </div>
                     </div>
                     <div className="w-20 h-20 absolute top-0 right-[50%]"> 
-                      <Draggable/>
+                      <Draggable code={code}/>
                     </div>
                   </TabsContent>
               </div>

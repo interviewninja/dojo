@@ -5,8 +5,8 @@ import React, { createContext, useState, Dispatch, SetStateAction } from "react"
 type TranscriptContextInterface = {
     transcript: any[];
     setTranscript: Dispatch<SetStateAction<any[]>>;
-    isTalking: boolean;
-    setIsTalking:  Dispatch<SetStateAction<boolean>>;
+    isAudioPlaying: boolean;
+    setisAudioPlaying:  Dispatch<SetStateAction<boolean>>;
     isAnimated: boolean;
     setIsAnimated: Dispatch<SetStateAction<boolean>>;
 };
@@ -14,8 +14,8 @@ type TranscriptContextInterface = {
 export const TranscriptContext = createContext<TranscriptContextInterface>({
   transcript: [],
   setTranscript: () => {}, 
-  isTalking: false,
-  setIsTalking: () => {},
+  isAudioPlaying: false,
+  setisAudioPlaying: () => {},
   isAnimated: false,
   setIsAnimated: () => {},
 })
@@ -26,11 +26,11 @@ type TranscriptContextProviderProps = {
 
 export const TranscriptContextProvider = ({ children }: TranscriptContextProviderProps) => {
     const [transcript, setTranscript] = useState<any[]>([])
-    const [isTalking, setIsTalking] = useState<boolean>(true)
+    const [isAudioPlaying, setisAudioPlaying] = useState<boolean>(true)
     const [isAnimated, setIsAnimated] = useState<boolean>(false)
   
     return (
-      <TranscriptContext.Provider value={{ transcript, setTranscript, isTalking, setIsTalking, isAnimated, setIsAnimated }}>
+      <TranscriptContext.Provider value={{ transcript, setTranscript, isAudioPlaying, setisAudioPlaying, isAnimated, setIsAnimated }}>
         {children}
       </TranscriptContext.Provider>
     );

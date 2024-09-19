@@ -12,7 +12,9 @@ const nextConfig = {
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
       RUNPOD_API_ID: process.env.RUNPOD_API_ID,
       RUNPOD_API_KEY: process.env.RUNPOD_API_KEY,
-      REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN
+      REPLICATE_API_TOKEN: process.env.REPLICATE_API_TOKEN,
+      GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
+      ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY,
     },
     webpack: (config) => {
       config.module.rules.push({

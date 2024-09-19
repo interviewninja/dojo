@@ -15,14 +15,14 @@ export function BentoBox() {
 
     useEffect(() => {
         if(theme == "dark"){
-            setDojo("https://i.ibb.co/KrBW0yQ/Mask-group.png") 
-            setCloud("https://i.ibb.co/HpjsCcW/Mask-group-1.png")
-            setSchedule("https://i.ibb.co/tX2G1Pz/Group-8845-1.png")
+            setDojo("https://i.imghippo.com/files/tzKGt1725314509.png") 
+            setCloud("https://i.imghippo.com/files/APjwo1725316740.png")
+            setSchedule("https://i.imghippo.com/files/rcshv1725314255.png")
             return
         }
-        setDojo("https://i.ibb.co/GkbdttT/Mask-group-1.png")
-        setCloud("https://i.ibb.co/qRSSNLk/Mask-group.png")
-        setSchedule("https://i.ibb.co/TwQzqjC/Group-8843.png")
+        setDojo("https://i.imghippo.com/files/WJoTT1725314841.png")
+        setCloud("https://i.imghippo.com/files/Kwpss1725314784.png")
+        setSchedule("https://i.imghippo.com/files/LrOtR1725314756.png")
     }, [theme])
 
     return(
@@ -43,7 +43,7 @@ export function BentoBox() {
                                 <div className='flex items-center justify-center rounded-full p-[2px] bg-border dark:bg-[#1B392E]'>
                                     <ArrowRight className='h-4 w-4 text-background'/>
                                 </div>
-                                <div className='text-lg text-border dark:text-[#1B392E]'>AI Coding Assistant powered by LLaMa-2</div>
+                                <div className='text-lg text-border dark:text-[#1B392E]'>AI Coding Assistant powered by <s>LLaMa-2</s> Google Gemini</div>
                             </div>
                             <div className='flex gap-x-4 items-center'>
                                 <div className='flex items-center justify-center rounded-full p-[2px] bg-border dark:bg-[#1B392E]'>

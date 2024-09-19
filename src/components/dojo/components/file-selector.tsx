@@ -40,7 +40,7 @@ export function FileSelector({ files, ...props }: FileSelectorProps) {
   useEffect(() => {
     const matchingDefault = defaults.find((item: Default) => item.language === language);
     if (matchingDefault) {
-        dev.log(matchingDefault.path)
+        console.log(matchingDefault.path)
         setSelectedPath(matchingDefault.path);
     }
   }, [language])
@@ -68,7 +68,6 @@ export function FileSelector({ files, ...props }: FileSelectorProps) {
               <CommandItem
                 key={file.id}
                 onSelect={() => {
-                  dev.log(file)
                   setSelectedPath(file)
                   setOpen(false)
                 }}
