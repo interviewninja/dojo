@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import Editor, { loader } from '@monaco-editor/react';
 import { useTheme } from "next-themes";
-import rgbHex from 'rgb-hex';
 import 'src/app/globals.css';
 
 type CodeEditorProps = {
