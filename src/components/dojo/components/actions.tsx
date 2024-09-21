@@ -4,15 +4,6 @@ import * as React from "react"
 import { Dialog } from "@radix-ui/react-dialog"
 import { DotsHorizontalIcon } from "@radix-ui/react-icons"
 import { useGlobalContext } from "@/contexts/global"
-import {
-  AlertDialog,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../../ui/alert-dialog"
 import { Button } from "../../ui/button"
 import {
   DialogContent,
@@ -31,11 +22,20 @@ import {
 import { Label } from "../../ui/label"
 import { Switch } from "../../ui/switch"
 import { toast } from "../../ui/use-toast"
+import { useSession } from "next-auth/react"
 
 export function Actions() {
-  const { setOpenAuth } = useGlobalContext()
+  const { setOpenAuth, isRLHFEnabled, setIsRLHFEnabled } = useGlobalContext()
   const [open, setIsOpen] = React.useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = React.useState(false)
+
+  const { data: session } = useSession()
+
+  const toggleRLHF = () => {
+    if(!session?.user) return setOpenAuth(true) 
+    setIsRLHFEnabled(!isRLHFEnabled)
+    setIsOpen(false)
+  }
 
   return (
     <>
@@ -50,13 +50,6 @@ export function Actions() {
           <DropdownMenuItem onSelect={() => setIsOpen(true)}>
             Reinforcement learning opt-out
           </DropdownMenuItem>
-          {/* <DropdownMenuSeparator />
-           <DropdownMenuItem
-            onSelect={() => setShowDeleteDialog(true)}
-            className="text-red-600"
-          >
-            Delete
-          </DropdownMenuItem> */}
         </DropdownMenuContent>
       </DropdownMenu>
       <Dialog open={open} onOpenChange={setIsOpen}>
@@ -74,7 +67,7 @@ export function Actions() {
               RLHF opt-out
             </h4>
             <div className="flex items-start justify-between space-x-4 pt-3">
-              <Switch name="show" id="show" defaultChecked={true} onClick={() => {setOpenAuth(true), setIsOpen(false)}} />
+              <Switch name="show" id="show" checked={isRLHFEnabled} onClick={toggleRLHF} />
               <Label className="grid gap-1 font-normal" htmlFor="show">
                 <span className="font-semibold">
                   I agree to contribute my &apos;transcript-only&apos; data 

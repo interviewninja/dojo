@@ -11,14 +11,13 @@ import "react-activity/dist/library.css"; import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card"
 import { useGlobalContext } from '@/contexts/global';
-import { isMobile } from 'react-device-detect';
 import { Rnd } from 'react-rnd'
 import Image from 'next/image'
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import { useToast } from "@/components/ui/use-toast"
 import { v4 as uuidv4 } from 'uuid';
 import { useContext } from "react";
-import { TranscriptContext } from "@/context/TranscriptContext";
+import { TranscriptContext } from "@/contexts/TranscriptContext";
 import { dev } from '@/dev';
 import axios from 'axios'
 import { GoogleGenerativeAI } from "@google/generative-ai"
@@ -35,7 +34,6 @@ const style = {
 export const Draggable = ({ code }: { code: string }) => {
   const { transcript: context, setTranscript, isAnimated, setIsAnimated, isAudioPlaying } = useContext(TranscriptContext)
   const { toast } = useToast();
-  const { viewType, setViewType } = useGlobalContext();
   const { language, setLanguage } = useGlobalContext();
   const [isHolding, setIsHolding] = useState(false);
   const [hasPressed, setHasPressed] = useState(false);
@@ -102,7 +100,7 @@ export const Draggable = ({ code }: { code: string }) => {
       const headers = {
         'ngrok-skip-browser-warning': 'true'
       }
-      const baseUrl = "https://ea37-34-168-64-17.ngrok-free.app" //process.env.MODALLABS_API_URL
+      const baseUrl = process.env.GOOGLECOLAB_API_URL
       axios.post(`${baseUrl}/api/inference`, {
         message: message,
       }, { 

@@ -1,20 +1,9 @@
 "use client"
 
 import React, { useEffect, useState, useRef } from "react";
-import ReactDOMServer from 'react-dom/server';
-import $ from 'jquery';
-import { defaults, Default } from "../data/defaults";
-import { ascii }  from "../data/ascii";
-import { Bounce } from "react-activity";
 import "react-activity/dist/library.css";
 import { useContext } from "react";
-import { TranscriptContext } from "@/context/TranscriptContext";
-import { useGlobalContext } from "@/contexts/global"
-import { ElevenLabsClient, play } from "elevenlabs";
-import { v4 as uuidv4 } from 'uuid';
-import { createWriteStream } from "fs";
-import { stream } from 'undici';
-import { dev } from "@/dev"
+import { TranscriptContext } from "@/contexts/TranscriptContext";
 
 export const Transcript = () => {
   const { transcript, setTranscript, isAnimated, isAudioPlaying, setisAudioPlaying } = useContext(TranscriptContext)

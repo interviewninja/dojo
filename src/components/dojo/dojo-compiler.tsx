@@ -10,7 +10,6 @@ import { Draggable } from "./components/draggable"
 import { Button } from "../ui/button"
 import { Windmill, Spinner } from "react-activity";
 import "react-activity/dist/library.css";
-import { Dialog } from "@radix-ui/react-dialog"
 import {
   HoverCard,
   HoverCardContent,
@@ -19,56 +18,34 @@ import {
 import { useTheme } from "next-themes";
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Bot, Zap, HelpCircle, CheckCircle2, PlayCircle, Mic, MicOff, VideoOff, Play, Pause  } from 'lucide-react';
-import { motion } from "framer-motion";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "../ui/tabs"
-import {
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog"
-import { Wheel, Colorful } from '@uiw/react-color';
 import { useGlobalContext } from "@/contexts/global"
-import { Textarea } from "../ui/textarea"
-import { CodeViewer } from "./components/code-viewer"
-import { MaxLengthSelector } from "./components/maxlength-selector"
-import { ModelSelector } from "./components/model-selector"
-import { LanguageSelector } from "./components/language-selector"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
-import { ViewSelector } from "./components/view-selector"
 import { Task } from "./components/task"
 import { Actions } from "./components/actions"
 import { Share } from "./components/share"
-import { PresetSave } from "./components/preset-save"
-import { FileSelector } from "./components/file-selector"
-import { DifficultySlider } from "./components/difficulty-slider"
-import { TopPSelector } from "./components/top-p-selector"
-import { models, modTypes } from "./data/models"
-import { langTypes, languages } from "./data/languages"
 import { defaults, Default } from "./data/defaults"
-import { viewTypes, views } from "./data/views"
-import { files } from "./data/files"
 import { useContext } from "react";
-import { TranscriptContext } from "@/context/TranscriptContext";
+import { TranscriptContext } from "@/contexts/TranscriptContext";
 import axios from 'axios'
 import { dev } from "@/dev"
 import { v4 as uuidv4 } from 'uuid';
 import { fizzBuzzTestFn } from "@/testing/FizzBuzz"
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import { useSession } from "next-auth/react"
+import { db } from "@/firebase/firebaseConfig"
+import { collection, addDoc } from "firebase/firestore"
 
 export function DojoCompiler() {
   const { transcript: context, setTranscript, isAnimated, setIsAnimated, isAudioPlaying } = useContext(TranscriptContext)
   const { theme } = useTheme();
-  const { setOpenAuth } = useGlobalContext();
-  const { language, setLanguage } = useGlobalContext();
+  const { language, setLanguage, isRLHFEnabled } = useGlobalContext();
   const [code, setCode] = useState(defaults[0].code);
   const [isHovering, setIsHovering] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
@@ -84,6 +61,7 @@ export function DojoCompiler() {
   const runTimes = useRef<number>(0)
 
   const { transcript, browserSupportsSpeechRecognition, resetTranscript, listening } = useSpeechRecognition()
+  const { data: session } = useSession()
 
   const handleRecording = () => {
     if(isMicOn){ 
@@ -250,7 +228,19 @@ export function DojoCompiler() {
       setIsAnimating(false)
       console.log("Error", err)
     })
+  }
 
+  const submitCode = async () => {
+    try {
+
+      if(!isRLHFEnabled) return
+      const docRef = await addDoc(collection(db, "rlhf"), {
+        transcript: context,
+        user: session?.user?.email || "anonymous",
+      })
+    }catch(error) {
+      console.log(error)
+    }
   }
 
   useEffect(() => {
@@ -260,6 +250,7 @@ export function DojoCompiler() {
     }
   }, [language])
 
+  // Need to fix duplicate TabContent child components in JSX
   return (
     <>
       <div id="playground">
@@ -361,37 +352,13 @@ export function DojoCompiler() {
                   </TabsList>
                 </div>
                 <Task/>
-                {/* <LanguageSelector types={langTypes} languages={languages} /> */}
                 {/* <ViewSelector types={viewTypes} views={views} /> */}
                 {/* <DifficultySlider defaultValue={[0.25]} /> */}
-                {/* <Separator/>
-                <div className="grid gap-2">
-                  <Label htmlFor="mode">Color Theme</Label>
-                  <div className="flex relative">
-                    <div className="w-[28px] h-[28px] rounded-full bg-black border border-border mr-2 relative" style={{backgroundColor: "#5b864a"}}>
-                      <ColorPicker color="#5b864a"/>
-                    </div>
-                    <div className="w-[28px] h-[28px] bg-black rounded-full border border-border mr-2 relative" style={{backgroundColor: "#579bd6"}}>
-                      <ColorPicker color="#579bd6"/>
-                    </div>
-                    <div className="w-[28px] h-[28px] bg-black rounded-full border border-border mr-2 relative" style={{backgroundColor: "#cb9076"}}>
-                      <ColorPicker color="#cb9076"/>
-                    </div>
-                    <div className="w-[28px] h-[28px] bg-black rounded-full border border-border mr-2 relative" style={{backgroundColor: "#b1caa4"}}>
-                      <ColorPicker color="#b1caa4"/>
-                    </div>
-                    <div className="w-[28px] h-[28px] bg-black rounded-full border border-border mr-2 relative" style={{backgroundColor: "#d0d0d0"}}>
-                      <ColorPicker color="#d0d0d0"/>
-                    </div>
-                    <div className="w-[28px] h-[28px] bg-secondary-foreground rounded-full border border-border"></div>
-                  </div>
-                </div> */}
               </div>
 
               <div className="w-[calc(100%-215px)] min-w-[100px] relative">
                   <TabsContent value="bot" className="mt-0 border-0 p-0">
                     <div className="flex h-full flex-col space-y-4">
-                      {/* <FileSelector files={files} /> */}
                       <div className="flex h-auto w-full md:h-screen relative">
                         <CodeEditor
                         code={language ? code : ""}
@@ -464,7 +431,7 @@ export function DojoCompiler() {
                             Run
                             <PlayCircle className="h-5 w-5"/>
                           </Button>
-                          <Button className="flex gap-[3px]" variant="secondary" onClick={getLLMResponse}>
+                          <Button className="flex gap-[3px]" variant="secondary" onClick={submitCode}>
                             Submit
                             <CheckCircle2 className="h-5 w-5"/>
                           </Button>
@@ -474,7 +441,6 @@ export function DojoCompiler() {
                   </TabsContent>
                   <TabsContent value="turing" className="mt-0 border-0 p-0">
                   <div className="flex h-full flex-col space-y-4">
-                      {/* <FileSelector files={files} /> */}
                       <div className="flex h-auto w-full md:h-screen relative">
                         <CodeEditor
                         code={language ? code : ""}
@@ -489,7 +455,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px] ${testSpecs[0] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 1
+                                {/* Case 1 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -508,7 +474,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap overflow-x-hidden bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[1] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 2
+                                {/* Case 2 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -527,7 +493,7 @@ export function DojoCompiler() {
                               <div className="width-[20px] flex gap-[6px] white-space-nowrap bg-background border-border border-[1px] items-center rounded-sm text-primary h-10 px-4 py-2 cursor-default">
                                 {isAnimating && <Spinner animating={isAnimating} color={'primary'} size={8} />}
                                 {!isAnimating && <div className={`h-[4px] w-[4px] min-h-[4px] min-w-[4px]  ${testSpecs[2] ?  "bg-green-400" : "bg-red-500"} rounded-full`}></div>}
-                                Case 3
+                                {/* Case 3 */}
                               </div>
                             </HoverCardTrigger>
                             <HoverCardContent className="w-fit text-left text-xs" side="top">
@@ -543,11 +509,13 @@ export function DojoCompiler() {
                           </HoverCard>
                         </div>
                         <div className="flex gap-[3px]">
-                          <Button disabled={isAnimating} onClick={runCode} >Run
-                            <PlayCircle className="h-5 w-5 ml-1.5"/>
+                          <Button className="flex gap-[3px]" disabled={isAnimating} onClick={runCode} >
+                            Run
+                            <PlayCircle className="h-5 w-5"/>
                           </Button>
-                          <Button variant="secondary">Submit
-                            <CheckCircle2 className="h-5 w-5 ml-1.5"/>
+                          <Button className="flex gap-[3px]" variant="secondary" onClick={submitCode}>
+                            Submit
+                            <CheckCircle2 className="h-5 w-5"/>
                           </Button>
                         </div>
                       </div>
@@ -557,12 +525,9 @@ export function DojoCompiler() {
                     </div>
                   </TabsContent>
               </div>
-
               <div className='hidden h-auto min-w-[300px] w-[350px] lg:flex'>
               <Transcript/>
               </div>
-
-              
             </div>
             </div>
           </Tabs>

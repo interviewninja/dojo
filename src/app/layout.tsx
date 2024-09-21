@@ -4,8 +4,8 @@ import { Inter } from 'next/font/google'
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
 import { GlobalContextProvider } from "../contexts/global"
-import { TranscriptContextProvider } from '@/context/TranscriptContext'
-import SessionProviders from '@/context/SessionContext'
+import { TranscriptContextProvider } from '@/contexts/TranscriptContext'
+import SessionProviders from '@/contexts/SessionContext'
 
 const inter = Inter({ subsets: ['latin'] })
 

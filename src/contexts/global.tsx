@@ -9,6 +9,8 @@ interface ContextProps {
     setViewType: Dispatch<SetStateAction<string>>, 
     openAuth: boolean,
     setOpenAuth: Dispatch<SetStateAction<boolean>>,
+    isRLHFEnabled: boolean,
+    setIsRLHFEnabled: Dispatch<SetStateAction<boolean>>,
 }
 
 const GlobalContext = createContext<ContextProps>({
@@ -18,15 +20,18 @@ const GlobalContext = createContext<ContextProps>({
     setViewType: (): string => '',
     openAuth: false,
     setOpenAuth: (): boolean => false,
+    isRLHFEnabled: true,
+    setIsRLHFEnabled: (): boolean => false,
 })
 
 export const GlobalContextProvider = ({ children }: { children: ReactNode }) => {
     const [language, setLanguage] = useState('')
     const [viewType, setViewType] = useState('tutorial')
     const [openAuth, setOpenAuth] = useState(false)
+    const [isRLHFEnabled, setIsRLHFEnabled] = useState(true)
 
     return(
-        <GlobalContext.Provider value={{ language, setLanguage, viewType, setViewType, openAuth, setOpenAuth }}>
+        <GlobalContext.Provider value={{ language, setLanguage, viewType, setViewType, openAuth, setOpenAuth, isRLHFEnabled, setIsRLHFEnabled }}>
         {children}
         </GlobalContext.Provider>
     )
