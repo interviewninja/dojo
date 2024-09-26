@@ -13,7 +13,7 @@ import { signOut, useSession } from "next-auth/react";
 export function Header() {
     const { setOpenAuth } = useGlobalContext()
 
-    const { data: session } = useSession()
+    const { data: session } = useSession() 
 
     return(
     <div className='container flex h-14 items-center space-x-4 sm:justify-between sm:space-x-0'>
