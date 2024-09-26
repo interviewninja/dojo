@@ -18,6 +18,7 @@ import {
 import { useTheme } from "next-themes";
 import { Label } from "../ui/label"
 import { Separator } from "../ui/separator"
+import { Dialog } from "@radix-ui/react-dialog"
 import { Bot, Zap, HelpCircle, CheckCircle2, PlayCircle, Mic, MicOff, VideoOff, Play, Pause  } from 'lucide-react';
 import {
   Tabs,
@@ -25,6 +26,13 @@ import {
   TabsList,
   TabsTrigger,
 } from "../ui/tabs"
+import {
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "../ui/dialog"
 import { useGlobalContext } from "@/contexts/global"
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition'
 import { Task } from "./components/task"
@@ -46,13 +54,13 @@ export function DojoCompiler() {
   const { transcript: context, setTranscript, isAnimated, setIsAnimated, isAudioPlaying } = useContext(TranscriptContext)
   const { theme } = useTheme();
   const { language, setLanguage, isRLHFEnabled } = useGlobalContext();
-  const [code, setCode] = useState(defaults[0].code);
+  const [code, setCode] = useState(defaults[0].code)
   const [isHovering, setIsHovering] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const [result, setResult] = useState("")
   const [testSpecs, setTestSpecs] = useState<boolean[]>(Array(3).fill(false))
   const [hex, setHex] = useState("#FFFFFF")
-  const [open, setIsOpen] = React.useState(false)
+  const [isOpen, setIsOpen] = React.useState(false)
   const [isMicOn, setIsMicOn] = useState(false)
   const [requestingLanguage, setRequestingLanguage] = useState(false)
   const [isTuringMode, setIsTuringMode] = useState(false)
@@ -232,12 +240,18 @@ export function DojoCompiler() {
 
   const submitCode = async () => {
     try {
-
-      if(!isRLHFEnabled) return
-      const docRef = await addDoc(collection(db, "rlhf"), {
-        transcript: context,
-        user: session?.user?.email || "anonymous",
-      })
+      runCode()
+      if(testSpecs.every(x => x)){
+        setIsOpen(true)
+        if(!isRLHFEnabled) return
+        const docRef = await addDoc(collection(db, "rlhf"), {
+          transcript: context,
+          user: session?.user?.email || "anonymous",
+        })
+        return
+      }
+      console.log("not all tests failed")
+      setIsOpen(false)
     }catch(error) {
       console.log(error)
     }
@@ -532,6 +546,21 @@ export function DojoCompiler() {
             </div>
           </Tabs>
         </div>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Congrats! You have completed your first Coding Challenge.</DialogTitle>
+              <DialogDescription>
+                You can now start the next challenge.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setIsOpen(false)}>
+                Start next challenge
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   )

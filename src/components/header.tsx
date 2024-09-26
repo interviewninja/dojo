@@ -34,7 +34,7 @@ export function Header() {
                 <span className="text-xs text-border">K</span>
             </kbd> 
             </Button>
-            <PricingToast/>
+            {/* <PricingToast/> */}
         </div>
         </div>
         <div className="flex-grow"></div>

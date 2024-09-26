@@ -39,6 +39,7 @@ export const Draggable = ({ code }: { code: string }) => {
   const [hasPressed, setHasPressed] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false)
   const [requestingLanguage, setRequestingLanguage] = useState(false)
+  const [screenRecording, setScreenRecording] = useState<string>("")
   const [videoSrc, setVideoSrc] = useState<string>("/default.mp4")
   const [nextVideoSrc, setNextVideoSrc] = useState<string | null>(null)
   const [isVideoMuted, setIsVideoMuted] = useState(true);
@@ -209,7 +210,7 @@ export const Draggable = ({ code }: { code: string }) => {
 
     return () => clearTimeout(timeoutId)
   }, [isWaiting])
-
+  
   return (
     <div>
       <Rnd
