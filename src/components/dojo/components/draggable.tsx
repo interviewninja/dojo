@@ -101,7 +101,7 @@ export const Draggable = ({ code }: { code: string }) => {
       const headers = {
         'ngrok-skip-browser-warning': 'true'
       }
-      const baseUrl = process.env.GOOGLECOLAB_API_URL
+      const baseUrl = process.env.GOOGLE_COLAB_API_URL
       axios.post(`${baseUrl}/api/inference`, {
         message: message,
       }, { 
