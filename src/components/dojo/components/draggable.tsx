@@ -161,6 +161,7 @@ export const Draggable = ({ code }: { code: string }) => {
   }, [transcript, isAudioPlaying])
 
   useEffect(() => {
+    if(!isMicOn) return
     if(isVideoPlaying){
       SpeechRecognition.stopListening()
       resetTranscript()

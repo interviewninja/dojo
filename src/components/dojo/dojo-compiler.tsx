@@ -124,6 +124,7 @@ export function DojoCompiler() {
   }
 
   useEffect(() => {
+    if(!isMicOn) return
     if(isAudioPlaying){
       SpeechRecognition.stopListening()
       resetTranscript()

@@ -32,7 +32,7 @@ export const Transcript = () => {
 
       const playAudio = async () => {
         try {
-          // throw new Error('Not implemented');
+          throw new Error('Not implemented');
           const response = await fetch('/api/generateAudio', {
             method: 'POST',
             headers: {
