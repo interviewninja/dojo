@@ -37,20 +37,22 @@ export const Transcript = () => {
             },
             body: JSON.stringify({
               text: mostRecent.payload,
-              voice: 'Jessica',
             }),
           });
-
+        
           if (!response.ok) {
             console.log('Error generating audio:', response);
             throw new Error('Error generating audio');
           }
-
-          const { filePath } = await response.json();
-
-          const audioElement = new Audio(filePath);
+        
+          const url = response.headers.get('Content-Location');
+          if (url === null) {
+            console.log('Error generating audio:', 'Audio URL not found in response headers');
+            throw new Error('Audio URL not found in response headers');
+          }
+          const audioElement = new Audio(url);
           audioElement.play();
-
+        
           audioElement.onended = () => {
             setisAudioPlaying(false);
           };

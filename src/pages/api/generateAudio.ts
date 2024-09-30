@@ -1,9 +1,6 @@
-// pages/api/generateAudio.tsx
-import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { ElevenLabsClient } from 'elevenlabs';
 import { NextApiRequest, NextApiResponse } from 'next';
-import path from 'path';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -21,21 +18,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     const fileName = `${uuidv4()}.mp3`;
-    const filePath = path.join(process.cwd(), 'public', 'audio', fileName);
 
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
-    const fileStream = fs.createWriteStream(filePath);
-    audio.pipe(fileStream);
-
-    fileStream.on('finish', () => {
-      res.status(200).json({ filePath: `/audio/${fileName}` });
-    });
-
-    fileStream.on('error', (error) => {
-      console.error('Error writing file:', error);
-      res.status(500).json({ message: 'Error creating audio file' });
-    });
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    audio.pipe(res);
   } catch (error) {
     console.error('Error generating audio:', error);
     res.status(500).json({ message: 'Error generating audio' });
