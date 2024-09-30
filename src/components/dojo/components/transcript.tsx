@@ -53,7 +53,11 @@ export const Transcript = () => {
           const audio = new Audio();
           audio.src = url;
           audio.play();
-          
+
+          audio.onended = () => {
+            setisAudioPlaying(true)
+          }
+
         } catch (error) {
           console.error('Error generating audio:', error);
 
