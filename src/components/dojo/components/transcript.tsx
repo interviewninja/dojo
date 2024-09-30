@@ -55,7 +55,7 @@ export const Transcript = () => {
           audio.play();
 
           audio.onended = () => {
-            setisAudioPlaying(true)
+            setisAudioPlaying(false)
           }
 
         } catch (error) {
