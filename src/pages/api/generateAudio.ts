@@ -19,8 +19,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const fileName = `${uuidv4()}.mp3`;
 
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    // Instead of writing to a file, stream the audio directly to the response
     res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
     audio.pipe(res);
   } catch (error) {
     console.error('Error generating audio:', error);

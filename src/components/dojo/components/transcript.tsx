@@ -4,11 +4,13 @@ import React, { useEffect, useState, useRef } from "react";
 import "react-activity/dist/library.css";
 import { useContext } from "react";
 import { TranscriptContext } from "@/contexts/TranscriptContext";
+import { ElevenLabsClient, play } from 'elevenlabs';
+import {Howl, Howler} from 'howler';
 
 export const Transcript = () => {
   const { transcript, setTranscript, isAnimated, isAudioPlaying, setisAudioPlaying } = useContext(TranscriptContext)
   const [utterance, setUtterance] = useState<any>(null)
-  const [audioURL, setAudioURL] = useState<any>(null);
+  const [audioStream, setAudioStream] = useState<any>(null);
   const outputRef =  useRef<HTMLDivElement | null>(null);
 
   function capitalizeSentences(text:string) {
@@ -30,6 +32,7 @@ export const Transcript = () => {
 
       const playAudio = async () => {
         try {
+          // throw new Error('Not implemented');
           const response = await fetch('/api/generateAudio', {
             method: 'POST',
             headers: {
@@ -37,25 +40,20 @@ export const Transcript = () => {
             },
             body: JSON.stringify({
               text: mostRecent.payload,
+              voice: 'Jessica',
             }),
           });
-        
+
           if (!response.ok) {
-            console.log('Error generating audio:', response);
             throw new Error('Error generating audio');
           }
-        
-          const url = response.headers.get('Content-Location');
-          if (url === null) {
-            console.log('Error generating audio:', 'Audio URL not found in response headers');
-            throw new Error('Audio URL not found in response headers');
-          }
-          const audioElement = new Audio(url);
-          audioElement.play();
-        
-          audioElement.onended = () => {
-            setisAudioPlaying(false);
-          };
+
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio();
+          audio.src = url;
+          audio.play();
+          
         } catch (error) {
           console.error('Error generating audio:', error);
 
@@ -99,9 +97,9 @@ export const Transcript = () => {
             </div>
           </div>  
       ))}
-      {audioURL && (
-        <audio autoPlay controls>
-          <source src={audioURL} type="audio/mpeg" />
+      {audioStream && (
+        <audio controls>
+          <source src={audioStream} type="audio/mpeg" />
         </audio>
       )}
 
