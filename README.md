@@ -1,34 +1,65 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+Interview Ninja
 
-## Getting Started
+![Landing Page](https://i.imghippo.com/files/MtA1h1728062624.png)
 
-First, run the development server:
+## About
+
+Interview Ninja is a web application that allows you to practice your interview skills. It provides a variety of questions and scenarios to help you prepare for your upcoming interview. The application is designed to be user-friendly and easy to navigate, making it a valuable tool for anyone looking to improve their interview skills.
+
+## Tech Stack
+
+Interview Ninja is built using the following technologies:
+
+- React.js
+- Shadcn UI
+- React Router
+- Material UI
+- Axios
+- Wav2Lip (Open Source Lip Sync)
+- MempoGAN (My Talking Face Generation GAN) **Coming Soon**
+- NextAuth
+- Firebase
+
+## Installation
+
+To install Interview Ninja, follow these steps:
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+git clone https://github.com/interviewninja/dojo.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install the dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+3. Run the application:
 
-## Learn More
+```bash
+npm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Open your browser and navigate to http://localhost:3000/
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+## Citation 
+```
+@inproceedings{10.1145/3394171.3413532,
+author = {Prajwal, K R and Mukhopadhyay, Rudrabha and Namboodiri, Vinay P. and Jawahar, C.V.},
+title = {A Lip Sync Expert Is All You Need for Speech to Lip Generation In the Wild},
+year = {2020},
+isbn = {9781450379885},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3394171.3413532},
+doi = {10.1145/3394171.3413532},
+booktitle = {Proceedings of the 28th ACM International Conference on Multimedia},
+pages = {484–492},
+numpages = {9},
+keywords = {lip sync, talking face generation, video generation},
+location = {Seattle, WA, USA},
+series = {MM '20}
+}
+```
