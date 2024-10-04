@@ -12,8 +12,10 @@ Interview Ninja is built using the following technologies:
 
 - React.js
 - Shadcn UI
-- React Router
-- Material UI
+- Next.js
+- Tailwind CSS
+- Python
+- FastAPI
 - Axios
 - Wav2Lip (Open Source Lip Sync)
 - MempoGAN (My Talking Face Generation GAN) **Coming Soon**
